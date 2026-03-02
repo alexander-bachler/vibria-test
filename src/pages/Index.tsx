@@ -217,14 +217,14 @@ const Index = () => {
           animate={{ opacity: 1 }}
           className="relative overflow-hidden"
         >
-          <div className="relative min-h-[50vh] flex flex-col justify-end p-6 md:p-10 lg:p-14">
+          <div className="relative min-h-[50vh] flex flex-col justify-end">
             <img
               src={heroImage}
               alt="VIBRIA Souterrain Veranstaltung"
               className="absolute inset-0 w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-primary/75" />
-            <div className="relative z-10">
+            <div className="relative z-10 container mx-auto px-4 md:px-6 py-8 md:py-12 lg:py-14">
               <div className="mb-2">
                 <span className="inline-block bg-primary-foreground/10 text-primary-foreground/80 font-body text-xs uppercase tracking-[0.3em] px-3 py-1 mb-4">
                   Kunst- und Kulturverein
