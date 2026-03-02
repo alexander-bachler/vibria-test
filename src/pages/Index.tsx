@@ -144,26 +144,45 @@ const Index = () => {
         </div>
       </header>
 
-      {/* ── Hero ───────────────────────────────────────────────── */}
+      {/* ── Hero – Flyer-Stil ──────────────────────────────────── */}
       {!isAdmin && !selectedEvent && (
         <motion.section
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="bg-primary pb-12 pt-6 md:pt-10 md:pb-20"
+          className="relative overflow-hidden"
         >
-          <div className="container mx-auto px-4 md:px-6">
-            <h1 className="text-3xl md:text-5xl lg:text-6xl text-primary-foreground uppercase leading-tight max-w-2xl">
-              Kunst & Kultur
-              <br />
-              <span className="text-primary-foreground/70 font-medium">im Souterrain</span>
-            </h1>
-            <p className="mt-4 text-primary-foreground/80 font-body text-sm md:text-base max-w-lg leading-relaxed">
-              VIBRIA ist ein gemeinnütziger Kunst- und Kulturverein im Herzen von Wien. 
-              In unserem intimen Souterrain-Raum mit 40 Plätzen erleben Sie Musik, Geschichten und Kunst hautnah.
-            </p>
-            <p className="mt-3 text-primary-foreground/50 font-body text-xs tracking-wide uppercase">
-              Reichsapfelgasse 1, 1150 Wien
-            </p>
+          {/* Split layout: text left, image right */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[60vh]">
+            {/* Left: Content block with primary bg */}
+            <div className="bg-primary flex flex-col justify-end p-6 md:p-10 lg:p-14">
+              <div className="mb-2">
+                <span className="inline-block bg-primary-foreground/10 text-primary-foreground/80 font-body text-xs uppercase tracking-[0.3em] px-3 py-1 mb-4">
+                  Kunst- und Kulturverein
+                </span>
+              </div>
+              <h1 className="text-4xl md:text-6xl lg:text-7xl text-primary-foreground uppercase leading-[0.9] mb-4">
+                Kunst &<br />Kultur<br />
+                <span className="text-primary-foreground/50 text-2xl md:text-3xl lg:text-4xl font-medium block mt-2">
+                  im Souterrain
+                </span>
+              </h1>
+              <p className="text-primary-foreground/70 font-body text-sm md:text-base max-w-md leading-relaxed mb-6">
+                In unserem intimen Souterrain-Raum mit 40 Plätzen erleben Sie Musik, Geschichten und Kunst hautnah.
+              </p>
+              <div className="flex items-center gap-2 text-primary-foreground/40 font-body text-xs uppercase tracking-[0.2em]">
+                <span className="w-8 h-px bg-primary-foreground/30" />
+                Reichsapfelgasse 1, 1150 Wien
+              </div>
+            </div>
+            {/* Right: Event flyer image */}
+            <div className="relative h-64 lg:h-auto">
+              <img
+                src={eventImage}
+                alt="VIBRIA Event"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent lg:bg-gradient-to-r lg:from-primary/40 lg:via-transparent lg:to-transparent" />
+            </div>
           </div>
         </motion.section>
       )}
@@ -455,7 +474,7 @@ const Index = () => {
   );
 };
 
-// ─── Event Card ──────────────────────────────────────────────────────────────
+// ─── Event Card – Flyer/Poster Style ─────────────────────────────────────────
 
 function EventCard({
   event,
@@ -468,68 +487,100 @@ function EventCard({
   soldOut: boolean;
   onSelect: () => void;
 }) {
+  // Parse date for poster display
+  const dateObj = new Date(event.date);
+  const day = dateObj.toLocaleDateString("de-AT", { day: "2-digit" });
+  const month = dateObj.toLocaleDateString("de-AT", { month: "2-digit" });
+  const year = dateObj.getFullYear();
+
   return (
     <motion.article
-      whileHover={{ y: -2 }}
-      className={`bg-card border border-border rounded overflow-hidden cursor-pointer transition-shadow hover:shadow-lg ${
-        soldOut ? "opacity-60 cursor-not-allowed" : ""
-      }`}
-      onClick={onSelect}
+      whileHover={{ y: -3, boxShadow: "0 20px 40px -15px hsl(195 90% 16% / 0.15)" }}
+      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      className={`overflow-hidden rounded-sm ${soldOut ? "opacity-60" : ""}`}
     >
-      <div className="flex flex-col md:flex-row">
-        {/* Image area */}
-        {event.id === "evt-1" && (
-          <div className="md:w-64 h-48 md:h-auto overflow-hidden flex-shrink-0">
+      <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] lg:grid-cols-[340px_1fr]">
+        {/* Left: Image with poster overlay */}
+        <div className="relative h-64 md:h-auto overflow-hidden bg-muted">
+          {event.id === "evt-1" ? (
             <img
               src={eventImage}
               alt={event.title}
               className="w-full h-full object-cover"
               loading="lazy"
             />
+          ) : (
+            <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+              <span className="text-6xl font-heading text-primary/20 uppercase">V</span>
+            </div>
+          )}
+          {/* Date overlay – like the flyer's bold date block */}
+          <div className="absolute bottom-0 left-0 bg-primary/90 backdrop-blur-sm px-4 py-3 md:px-5 md:py-4">
+            <div className="font-heading text-primary-foreground text-2xl md:text-3xl leading-none font-bold">
+              {day}.{month}.{year}
+            </div>
+            <div className="font-heading text-primary-foreground/80 text-lg md:text-xl leading-none mt-0.5">
+              {event.time} UHR
+            </div>
           </div>
-        )}
-        <div className="p-5 md:p-6 flex-1 flex flex-col">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
-            <div>
-              <h3 className="text-lg md:text-xl uppercase text-foreground leading-tight">
+        </div>
+
+        {/* Right: Content */}
+        <div className="bg-card border border-border border-l-0 p-5 md:p-7 flex flex-col">
+          {/* Title block – mimicking the flyer hierarchy */}
+          <div className="mb-4">
+            {event.title.includes(" - ") || event.title.includes("WER IST") ? (
+              <>
+                <span className="text-xs font-heading uppercase tracking-[0.2em] text-muted-foreground block mb-1">
+                  {event.title.split(/\s*[-–]\s*/)[0] || ""}
+                </span>
+                <h3 className="text-2xl md:text-3xl uppercase text-foreground leading-[0.95] font-extrabold">
+                  {event.title.split(/\s*[-–]\s*/).slice(1).join(" - ") || event.title}
+                </h3>
+              </>
+            ) : (
+              <h3 className="text-2xl md:text-3xl uppercase text-foreground leading-[0.95] font-extrabold">
                 {event.title}
               </h3>
-              {event.subtitle && (
-                <p className="text-sm text-accent font-heading uppercase tracking-wide">
-                  {event.subtitle}
-                </p>
-              )}
-            </div>
-            {soldOut ? (
-              <span className="inline-block bg-destructive/10 text-destructive font-heading text-xs uppercase tracking-wider px-3 py-1 rounded flex-shrink-0">
-                Ausverkauft
-              </span>
-            ) : (
-              <span className="inline-block bg-success/10 text-success font-body text-xs px-3 py-1 rounded flex-shrink-0">
-                {available} Plätze frei
-              </span>
+            )}
+            {event.subtitle && (
+              <p className="text-base md:text-lg text-accent font-heading uppercase tracking-wide mt-1">
+                {event.subtitle}
+              </p>
             )}
           </div>
-          <p className="text-sm font-body text-muted-foreground mb-4 leading-relaxed">
+
+          <p className="text-sm font-body text-muted-foreground mb-5 leading-relaxed flex-1">
             {event.description}
           </p>
-          <div className="flex flex-wrap items-center gap-4 text-xs font-body text-muted-foreground mb-4">
-            <span>{formatDate(event.date)}</span>
-            <span>{event.time} Uhr</span>
-            <span className="text-accent font-medium">{event.admission}</span>
-          </div>
-          <div className="mt-auto">
-            {!soldOut ? (
+
+          {/* Bottom bar – admission + seats + CTA */}
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 pt-4 border-t border-border">
+            <div className="space-y-1">
+              <span className="inline-block bg-muted text-muted-foreground font-body text-xs px-3 py-1 rounded">
+                {event.admission}
+              </span>
+              <div>
+                {soldOut ? (
+                  <span className="text-destructive font-heading text-xs uppercase tracking-wider">
+                    Ausverkauft
+                  </span>
+                ) : (
+                  <span className="text-sm font-body text-foreground">
+                    <span className="font-bold text-lg">{available}</span>
+                    <span className="text-muted-foreground"> / {event.totalSeats} Plätze frei</span>
+                  </span>
+                )}
+              </div>
+            </div>
+            {!soldOut && (
               <button
                 onClick={(e) => { e.stopPropagation(); onSelect(); }}
-                className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-heading text-sm uppercase tracking-wider px-6 py-2.5 rounded hover:bg-accent transition-colors"
+                className="group inline-flex items-center gap-2 bg-primary text-primary-foreground font-heading text-sm uppercase tracking-wider px-7 py-3 rounded-sm hover:bg-accent transition-all duration-200"
               >
                 Sitzplatz buchen
+                <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
               </button>
-            ) : (
-              <span className="inline-block font-body text-sm text-muted-foreground italic">
-                Keine Plätze mehr verfügbar
-              </span>
             )}
           </div>
         </div>
