@@ -201,7 +201,12 @@ const Index = () => {
       {/* ── Header ─────────────────────────────────────────────── */}
       <header className="bg-primary sticky top-0 z-50">
         <div className="container mx-auto flex items-center justify-between py-4 px-4 md:px-6">
-          <img src={vibriaLogo} alt="VIBRIA Kunst- und Kulturverein" className="h-12 md:h-16 invert brightness-200" />
+          <img
+            src={vibriaLogo}
+            alt="VIBRIA Kunst- und Kulturverein"
+            className="h-12 md:h-16 invert brightness-200 cursor-pointer"
+            onClick={() => { setIsAdmin(false); setSelectedEvent(null); setBookingSuccess(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          />
           <nav className="flex items-center gap-5 md:gap-7">
             <a href="#veranstaltungen" className="text-xs font-body uppercase tracking-widest text-primary-foreground/70 hover:text-primary-foreground transition-colors hidden sm:inline">
               Programm
