@@ -199,15 +199,26 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* ── Header ─────────────────────────────────────────────── */}
-      <header className="bg-primary">
+      <header className="bg-primary sticky top-0 z-50">
         <div className="container mx-auto flex items-center justify-between py-4 px-4 md:px-6">
           <img src={vibriaLogo} alt="VIBRIA Kunst- und Kulturverein" className="h-12 md:h-16 invert brightness-200" />
-          <button
-            onClick={() => { setIsAdmin(!isAdmin); setSelectedEvent(null); }}
-            className="text-xs font-body uppercase tracking-widest text-primary-foreground/60 hover:text-primary-foreground transition-colors"
-          >
-            {isAdmin ? "← Zurück" : "Admin"}
-          </button>
+          <nav className="flex items-center gap-5 md:gap-7">
+            <a href="#veranstaltungen" className="text-xs font-body uppercase tracking-widest text-primary-foreground/70 hover:text-primary-foreground transition-colors hidden sm:inline">
+              Programm
+            </a>
+            <a href="#adresse" className="text-xs font-body uppercase tracking-widest text-primary-foreground/70 hover:text-primary-foreground transition-colors hidden sm:inline">
+              Adresse
+            </a>
+            <a href="#kontakt" className="text-xs font-body uppercase tracking-widest text-primary-foreground/70 hover:text-primary-foreground transition-colors hidden sm:inline">
+              Kontakt
+            </a>
+            <button
+              onClick={() => { setIsAdmin(!isAdmin); setSelectedEvent(null); }}
+              className="text-xs font-body uppercase tracking-widest text-primary-foreground/60 hover:text-primary-foreground transition-colors"
+            >
+              {isAdmin ? "← Zurück" : "Admin"}
+            </button>
+          </nav>
         </div>
       </header>
 
@@ -249,7 +260,7 @@ const Index = () => {
         </motion.section>
       )}
 
-      <main className="container mx-auto px-4 md:px-6 py-8 md:py-12">
+      <main id="veranstaltungen" className="container mx-auto px-4 md:px-6 py-8 md:py-12 scroll-mt-20">
         <AnimatePresence mode="wait">
           {/* ── Visitor: Event List ──────────────────────────────── */}
           {!isAdmin && !selectedEvent && (
@@ -590,6 +601,78 @@ const Index = () => {
               Alle Videos ansehen
               <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
             </a>
+          </div>
+        </section>
+      )}
+
+      {/* ── Adresse ──────────────────────────────────────────── */}
+      {!isAdmin && !selectedEvent && (
+        <section id="adresse" className="scroll-mt-20 border-t border-border">
+          <div className="container mx-auto px-4 md:px-6 py-12 md:py-16">
+            <h2 className="text-2xl md:text-3xl text-foreground uppercase mb-8">
+              Adresse
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <h3 className="text-lg text-foreground font-heading uppercase mb-3">VIBRIA | Kunst- und Kulturverein</h3>
+                <p className="font-body text-muted-foreground leading-relaxed mb-4">
+                  Reichsapfelgasse 1<br />
+                  1150 Wien<br />
+                  Österreich
+                </p>
+                <p className="font-body text-sm text-muted-foreground">
+                  Unser Souterrain befindet sich im Erdgeschoss – barrierefrei erreichbar.
+                </p>
+              </div>
+              <div className="rounded-sm overflow-hidden bg-muted" style={{ minHeight: 280 }}>
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2659.5!2d16.3330!3d48.1960!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x476d078a1c6b1e3b%3A0x0!2sReichsapfelgasse%201%2C%201150%20Wien!5e0!3m2!1sde!2sat!4v1700000000000"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0, minHeight: 280 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Standort VIBRIA"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── Kontakt ─────────────────────────────────────────────── */}
+      {!isAdmin && !selectedEvent && (
+        <section id="kontakt" className="scroll-mt-20 bg-card border-t border-border">
+          <div className="container mx-auto px-4 md:px-6 py-12 md:py-16">
+            <h2 className="text-2xl md:text-3xl text-foreground uppercase mb-8">
+              Kontakt
+            </h2>
+            <div className="max-w-lg">
+              <p className="font-body text-muted-foreground leading-relaxed mb-6">
+                Fragen zu unseren Veranstaltungen oder zur Reservierung? Schreiben Sie uns gerne!
+              </p>
+              <div className="space-y-3 font-body text-sm">
+                <div className="flex items-center gap-3">
+                  <span className="text-primary font-heading text-lg">✉</span>
+                  <a href="mailto:info@vibria.art" className="text-foreground hover:text-primary transition-colors">
+                    info@vibria.art
+                  </a>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-primary font-heading text-lg">◆</span>
+                  <a href="https://www.instagram.com/vibria.art/" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-primary transition-colors">
+                    @vibria.art auf Instagram
+                  </a>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-primary font-heading text-lg">◆</span>
+                  <a href="https://www.facebook.com/vibria.art" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-primary transition-colors">
+                    VIBRIA auf Facebook
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       )}
