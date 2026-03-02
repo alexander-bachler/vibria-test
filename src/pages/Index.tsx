@@ -488,7 +488,7 @@ function EventCard({
             />
           </div>
         )}
-        <div className="p-5 md:p-6 flex-1">
+        <div className="p-5 md:p-6 flex-1 flex flex-col">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
             <div>
               <h3 className="text-lg md:text-xl uppercase text-foreground leading-tight">
@@ -510,13 +510,27 @@ function EventCard({
               </span>
             )}
           </div>
-          <p className="text-sm font-body text-muted-foreground mb-3 leading-relaxed">
+          <p className="text-sm font-body text-muted-foreground mb-4 leading-relaxed">
             {event.description}
           </p>
-          <div className="flex flex-wrap items-center gap-4 text-xs font-body text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-4 text-xs font-body text-muted-foreground mb-4">
             <span>{formatDate(event.date)}</span>
             <span>{event.time} Uhr</span>
             <span className="text-accent font-medium">{event.admission}</span>
+          </div>
+          <div className="mt-auto">
+            {!soldOut ? (
+              <button
+                onClick={(e) => { e.stopPropagation(); onSelect(); }}
+                className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-heading text-sm uppercase tracking-wider px-6 py-2.5 rounded hover:bg-accent transition-colors"
+              >
+                Sitzplatz buchen
+              </button>
+            ) : (
+              <span className="inline-block font-body text-sm text-muted-foreground italic">
+                Keine Plätze mehr verfügbar
+              </span>
+            )}
           </div>
         </div>
       </div>
