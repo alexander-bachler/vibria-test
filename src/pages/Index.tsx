@@ -451,6 +451,50 @@ const Index = () => {
         </AnimatePresence>
       </main>
 
+      {/* ── Video-Sektion ──────────────────────────────────────── */}
+      {!isAdmin && !selectedEvent && (
+        <section className="bg-card border-t border-border">
+          <div className="container mx-auto px-4 md:px-6 py-12 md:py-16">
+            <h2 className="text-2xl md:text-3xl text-foreground uppercase mb-2">
+              VIBRIA auf YouTube
+            </h2>
+            <p className="text-muted-foreground font-body text-sm mb-8 max-w-xl">
+              Erleben Sie Ausschnitte unserer Veranstaltungen, Künstlerporträts und Einblicke in unser Souterrain.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {/* Platzhalter-Videos – Video-IDs hier ersetzen */}
+              {[
+                { id: "dQw4w9WgXcQ", label: "Video 1" },
+                { id: "dQw4w9WgXcQ", label: "Video 2" },
+                { id: "dQw4w9WgXcQ", label: "Video 3" },
+              ].map((video, i) => (
+                <div key={i} className="relative overflow-hidden rounded-sm bg-muted" style={{ aspectRatio: "16/9" }}>
+                  <iframe
+                    src={`https://www.youtube.com/embed/${video.id}`}
+                    title={video.label}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="absolute inset-0 w-full h-full"
+                    loading="lazy"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <a
+              href="https://www.youtube.com/@vibria-kunst-und-kulturverein"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-2 bg-primary text-primary-foreground font-heading text-sm uppercase tracking-wider px-7 py-3 rounded-sm hover:bg-accent transition-all duration-200"
+            >
+              Alle Videos ansehen
+              <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
+            </a>
+          </div>
+        </section>
+      )}
+
       {/* ── Footer ─────────────────────────────────────────────── */}
       <footer className="border-t border-border py-8 mt-12">
         <div className="container mx-auto px-4 md:px-6 text-center">
@@ -463,6 +507,9 @@ const Index = () => {
             </a>
             <a href="https://www.facebook.com/vibria.art" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors text-xs font-body">
               Facebook
+            </a>
+            <a href="https://www.youtube.com/@vibria-kunst-und-kulturverein" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors text-xs font-body">
+              YouTube
             </a>
             <a href="https://www.vibria.art/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors text-xs font-body">
               Website
