@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import vibriaLogo from "@/assets/vibria-logo.svg";
 import eventImage from "@/assets/event-thomas.jpg";
@@ -8,6 +8,7 @@ import eventLeichtglaeubige from "@/assets/event-leichtglaeubige.png";
 import eventWeihnachtsmarkt from "@/assets/event-weihnachtsmarkt.png";
 import eventJavier from "@/assets/event-javier.png";
 import heroImage from "@/assets/hero-souterrain.png";
+import SeatMap from "@/components/SeatMap";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -29,6 +30,7 @@ interface Booking {
   name: string;
   email: string;
   tickets: number;
+  seatIds: string[];
   createdAt: string;
 }
 
@@ -139,7 +141,7 @@ const Index = () => {
   // ─── Booking form state
   const [bName, setBName] = useState("");
   const [bEmail, setBEmail] = useState("");
-  const [bTickets, setBTickets] = useState(1);
+  const [bSelectedSeats, setBSelectedSeats] = useState<string[]>([]);
 
   // ─── Admin form state
   const [aTitle, setATitle] = useState("");
@@ -151,22 +153,21 @@ const Index = () => {
 
   const handleBook = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedEvent) return;
-    const available = getAvailableSeats(selectedEvent, bookings);
-    if (bTickets > available || bTickets < 1) return;
+    if (!selectedEvent || bSelectedSeats.length === 0) return;
 
     const booking: Booking = {
       id: `bk-${Date.now()}`,
       eventId: selectedEvent.id,
       name: bName.trim(),
       email: bEmail.trim(),
-      tickets: bTickets,
+      tickets: bSelectedSeats.length,
+      seatIds: [...bSelectedSeats],
       createdAt: new Date().toISOString(),
     };
     setBookings((prev) => [...prev, booking]);
     setBName("");
     setBEmail("");
-    setBTickets(1);
+    setBSelectedSeats([]);
     setBookingSuccess(true);
     setTimeout(() => {
       setBookingSuccess(false);
@@ -325,10 +326,10 @@ const Index = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="max-w-lg mx-auto"
+              className="max-w-2xl mx-auto"
             >
               <button
-                onClick={() => { setSelectedEvent(null); setBookingSuccess(false); }}
+                onClick={() => { setSelectedEvent(null); setBookingSuccess(false); setBSelectedSeats([]); }}
                 className="text-sm text-muted-foreground hover:text-foreground font-body mb-6 inline-flex items-center gap-1 transition-colors"
               >
                 ← Zurück zum Programm
@@ -354,14 +355,28 @@ const Index = () => {
                   <p className="text-muted-foreground font-body text-sm mb-6">
                     {selectedEvent.title} — {formatDate(selectedEvent.date)}, {selectedEvent.time} Uhr
                   </p>
-                  <p className="text-sm font-body mb-6">
-                    <span className="font-semibold text-foreground">
-                      {getAvailableSeats(selectedEvent, bookings)}
-                    </span>{" "}
-                    <span className="text-muted-foreground">von {selectedEvent.totalSeats} Plätzen verfügbar</span>
-                  </p>
 
-                  <form onSubmit={handleBook} className="space-y-4">
+                  {/* Seat Map */}
+                  <div className="mb-8">
+                    <label className="block text-xs uppercase tracking-wider text-muted-foreground font-body mb-3">
+                      Plätze auswählen
+                    </label>
+                    <SeatMap
+                      bookedSeatIds={bookings
+                        .filter((b) => b.eventId === selectedEvent.id)
+                        .flatMap((b) => b.seatIds)}
+                      selectedSeatIds={bSelectedSeats}
+                      onToggleSeat={(seatId) => {
+                        setBSelectedSeats((prev) =>
+                          prev.includes(seatId)
+                            ? prev.filter((s) => s !== seatId)
+                            : [...prev, seatId]
+                        );
+                      }}
+                    />
+                  </div>
+
+                  <form onSubmit={handleBook} className="space-y-4 max-w-md">
                     <div>
                       <label className="block text-xs uppercase tracking-wider text-muted-foreground font-body mb-1">
                         Name
@@ -388,25 +403,14 @@ const Index = () => {
                         className="w-full bg-card border border-input rounded px-3 py-2.5 font-body text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs uppercase tracking-wider text-muted-foreground font-body mb-1">
-                        Anzahl Plätze
-                      </label>
-                      <input
-                        type="number"
-                        required
-                        min={1}
-                        max={getAvailableSeats(selectedEvent, bookings)}
-                        value={bTickets}
-                        onChange={(e) => setBTickets(Number(e.target.value))}
-                        className="w-24 bg-card border border-input rounded px-3 py-2.5 font-body text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                      />
-                    </div>
                     <button
                       type="submit"
-                      className="w-full bg-primary text-primary-foreground font-heading text-lg uppercase tracking-wider py-3 rounded hover:bg-accent transition-colors"
+                      disabled={bSelectedSeats.length === 0}
+                      className="w-full bg-primary text-primary-foreground font-heading text-lg uppercase tracking-wider py-3 rounded hover:bg-accent transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      Jetzt reservieren
+                      {bSelectedSeats.length > 0
+                        ? `${bSelectedSeats.length} ${bSelectedSeats.length === 1 ? "Platz" : "Plätze"} reservieren`
+                        : "Bitte Plätze auswählen"}
                     </button>
                   </form>
                 </>
