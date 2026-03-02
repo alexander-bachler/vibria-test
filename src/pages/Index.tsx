@@ -7,6 +7,7 @@ import eventJungeTalente from "@/assets/event-junge-talente.jpg";
 import eventLeichtglaeubige from "@/assets/event-leichtglaeubige.png";
 import eventWeihnachtsmarkt from "@/assets/event-weihnachtsmarkt.png";
 import eventJavier from "@/assets/event-javier.png";
+import heroImage from "@/assets/hero-souterrain.png";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -216,24 +217,32 @@ const Index = () => {
           animate={{ opacity: 1 }}
           className="relative overflow-hidden"
         >
-          <div className="bg-primary min-h-[40vh] flex flex-col justify-end p-6 md:p-10 lg:p-14">
-            <div className="mb-2">
-              <span className="inline-block bg-primary-foreground/10 text-primary-foreground/80 font-body text-xs uppercase tracking-[0.3em] px-3 py-1 mb-4">
-                Kunst- und Kulturverein
-              </span>
-            </div>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl text-primary-foreground uppercase leading-[0.9] mb-4">
-              Kunst &<br />Kultur<br />
-              <span className="text-primary-foreground/50 text-2xl md:text-3xl lg:text-4xl font-medium block mt-2">
-                im Souterrain
-              </span>
-            </h1>
-            <p className="text-primary-foreground/70 font-body text-sm md:text-base max-w-md leading-relaxed mb-6">
-              In unserem intimen Souterrain-Raum mit 40 Plätzen erleben Sie Musik, Geschichten und Kunst hautnah.
-            </p>
-            <div className="flex items-center gap-2 text-primary-foreground/40 font-body text-xs uppercase tracking-[0.2em]">
-              <span className="w-8 h-px bg-primary-foreground/30" />
-              Reichsapfelgasse 1, 1150 Wien
+          <div className="relative min-h-[50vh] flex flex-col justify-end p-6 md:p-10 lg:p-14">
+            <img
+              src={heroImage}
+              alt="VIBRIA Souterrain Veranstaltung"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-primary/75" />
+            <div className="relative z-10">
+              <div className="mb-2">
+                <span className="inline-block bg-primary-foreground/10 text-primary-foreground/80 font-body text-xs uppercase tracking-[0.3em] px-3 py-1 mb-4">
+                  Kunst- und Kulturverein
+                </span>
+              </div>
+              <h1 className="text-4xl md:text-6xl lg:text-7xl text-primary-foreground uppercase leading-[0.9] mb-4">
+                Kunst &<br />Kultur<br />
+                <span className="text-primary-foreground/50 text-2xl md:text-3xl lg:text-4xl font-medium block mt-2">
+                  im Souterrain
+                </span>
+              </h1>
+              <p className="text-primary-foreground/70 font-body text-sm md:text-base max-w-md leading-relaxed mb-6">
+                In unserem intimen Souterrain-Raum mit 40 Plätzen erleben Sie Musik, Geschichten und Kunst hautnah.
+              </p>
+              <div className="flex items-center gap-2 text-primary-foreground/40 font-body text-xs uppercase tracking-[0.2em]">
+                <span className="w-8 h-px bg-primary-foreground/30" />
+                Reichsapfelgasse 1, 1150 Wien
+              </div>
             </div>
           </div>
         </motion.section>
