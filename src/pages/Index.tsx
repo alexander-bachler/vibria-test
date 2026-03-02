@@ -372,6 +372,15 @@ const Index = () => {
                     {selectedEvent.title} — {formatDate(selectedEvent.date)}, {selectedEvent.time} Uhr
                   </p>
 
+                  <div className="bg-muted/50 border border-border rounded p-4 mb-8 font-body text-sm text-muted-foreground leading-relaxed">
+                    <p className="mb-2">
+                      VIBRIA ist ein freiwilliger Kunst- und Kulturverein. Alle Veranstaltungen werden ehrenamtlich organisiert und durch freiwillige Spenden ermöglicht.
+                    </p>
+                    <p className="font-semibold text-foreground">
+                      Bitte nehmen Sie Ihre reservierten Sitzplätze spätestens 15 Minuten vor Veranstaltungsbeginn ein. Nicht beanspruchte Reservierungen werden danach für andere Besucher freigegeben.
+                    </p>
+                  </div>
+
                   {/* Seat Map */}
                   <div className="mb-8">
                     <label className="block text-xs uppercase tracking-wider text-muted-foreground font-body mb-3">
