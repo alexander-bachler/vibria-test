@@ -4,6 +4,9 @@ import vibriaLogo from "@/assets/vibria-logo.svg";
 import eventImage from "@/assets/event-thomas.jpg";
 import eventMirtilli from "@/assets/event-mirtilli.jpg";
 import eventJungeTalente from "@/assets/event-junge-talente.jpg";
+import eventLeichtglaeubige from "@/assets/event-leichtglaeubige.png";
+import eventWeihnachtsmarkt from "@/assets/event-weihnachtsmarkt.png";
+import eventJavier from "@/assets/event-javier.png";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -65,6 +68,42 @@ const INITIAL_EVENTS: VEvent[] = [
     admission: "Freiwillige Spenden",
     totalSeats: 40,
     image: "junge-talente",
+  },
+  {
+    id: "evt-4",
+    title: "DIE GESELLSCHAFT DER LEICHTGLÄUBIGEN",
+    subtitle: "Theaterperformance",
+    date: "2026-02-28",
+    time: "19:30",
+    description:
+      "Eine packende Theaterperformance, die uns zum Nachdenken bringt. Erleben Sie einen Abend voller Dramatik und Tiefgang im VIBRIA.",
+    admission: "Freiwillige Spenden",
+    totalSeats: 40,
+    image: "leichtglaeubige",
+  },
+  {
+    id: "evt-5",
+    title: "JAVIER MEDINA BERNAL",
+    subtitle: "Live-Konzert",
+    date: "2026-01-24",
+    time: "19:30",
+    description:
+      "Ein mitreißendes Live-Konzert mit Javier Medina Bernal. Lassen Sie sich von seiner Musik verzaubern – ein unvergesslicher Abend im intimen Rahmen des VIBRIA.",
+    admission: "Freiwillige Spenden",
+    totalSeats: 40,
+    image: "javier",
+  },
+  {
+    id: "evt-6",
+    title: "VIBRIA WEIHNACHTSMARKT",
+    subtitle: "Handwerkskunst & Heißgetränke",
+    date: "2025-12-20",
+    time: "12:00",
+    description:
+      "Handwerkskunst & Heißgetränke am 20.–21. Dezember, 12:00–18:00 Uhr. Extra: Am 21. Dezember um 17:30 Uhr – Tee und Arirang: Ausklang mit koreanischem Tee und Konzert.",
+    admission: "Freiwillige Spenden",
+    totalSeats: 40,
+    image: "weihnachtsmarkt",
   },
 ];
 
@@ -580,6 +619,9 @@ function EventCard({
               "evt-1": eventImage,
               "mirtilli": eventMirtilli,
               "junge-talente": eventJungeTalente,
+              "leichtglaeubige": eventLeichtglaeubige,
+              "weihnachtsmarkt": eventWeihnachtsmarkt,
+              "javier": eventJavier,
             };
             const src = event.image ? imgMap[event.image] : (event.id === "evt-1" ? eventImage : undefined);
             return src ? (
