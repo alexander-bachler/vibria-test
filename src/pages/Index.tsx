@@ -262,29 +262,63 @@ const Index = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
-              <h2 className="text-2xl md:text-3xl text-foreground uppercase mb-6">
-                Programm
-              </h2>
-              <div className="space-y-6">
-                {events.map((evt) => {
-                  const available = getAvailableSeats(evt, bookings);
-                  const soldOut = available <= 0;
-                  return (
-                    <EventCard
-                      key={evt.id}
-                      event={evt}
-                      available={available}
-                      soldOut={soldOut}
-                      onSelect={() => !soldOut && setSelectedEvent(evt)}
-                    />
-                  );
-                })}
-                {events.length === 0 && (
-                  <p className="text-muted-foreground font-body">
-                    Derzeit sind keine Veranstaltungen geplant.
-                  </p>
-                )}
-              </div>
+              {(() => {
+                const today = new Date().toISOString().slice(0, 10);
+                const sorted = [...events].sort((a, b) => a.date.localeCompare(b.date));
+                const upcoming = sorted.filter((e) => e.date >= today);
+                const past = sorted.filter((e) => e.date < today).reverse();
+
+                return (
+                  <>
+                    {/* Aktuelle Veranstaltungen */}
+                    <h2 className="text-2xl md:text-3xl text-foreground uppercase mb-6">
+                      Aktuelle Veranstaltungen
+                    </h2>
+                    {upcoming.length > 0 ? (
+                      <div className="space-y-6">
+                        {upcoming.map((evt) => {
+                          const available = getAvailableSeats(evt, bookings);
+                          const soldOut = available <= 0;
+                          return (
+                            <EventCard
+                              key={evt.id}
+                              event={evt}
+                              available={available}
+                              soldOut={soldOut}
+                              onSelect={() => !soldOut && setSelectedEvent(evt)}
+                            />
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground font-body mb-8">
+                        Derzeit sind keine Veranstaltungen geplant.
+                      </p>
+                    )}
+
+                    {/* Vergangene Veranstaltungen */}
+                    {past.length > 0 && (
+                      <>
+                        <h2 className="text-2xl md:text-3xl text-foreground uppercase mt-14 mb-6 opacity-70">
+                          Vergangene Veranstaltungen
+                        </h2>
+                        <div className="space-y-6 opacity-75">
+                          {past.map((evt) => (
+                            <EventCard
+                              key={evt.id}
+                              event={evt}
+                              available={0}
+                              soldOut={true}
+                              onSelect={() => {}}
+                              isPast
+                            />
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </>
+                );
+              })()}
             </motion.div>
           )}
 
@@ -593,11 +627,13 @@ function EventCard({
   available,
   soldOut,
   onSelect,
+  isPast,
 }: {
   event: VEvent;
   available: number;
   soldOut: boolean;
   onSelect: () => void;
+  isPast?: boolean;
 }) {
   // Parse date for poster display
   const dateObj = new Date(event.date);
@@ -678,20 +714,28 @@ function EventCard({
               <span className="inline-block bg-muted text-muted-foreground font-body text-xs px-3 py-1 rounded">
                 {event.admission}
               </span>
-              <div>
-                {soldOut ? (
-                  <span className="text-destructive font-heading text-xs uppercase tracking-wider">
-                    Ausverkauft
+              {isPast ? (
+                <div>
+                  <span className="text-muted-foreground font-heading text-xs uppercase tracking-wider">
+                    Vergangen
                   </span>
-                ) : (
-                  <span className="text-sm font-body text-foreground">
-                    <span className="font-bold text-lg">{available}</span>
-                    <span className="text-muted-foreground"> / {event.totalSeats} Plätze frei</span>
-                  </span>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div>
+                  {soldOut ? (
+                    <span className="text-destructive font-heading text-xs uppercase tracking-wider">
+                      Ausverkauft
+                    </span>
+                  ) : (
+                    <span className="text-sm font-body text-foreground">
+                      <span className="font-bold text-lg">{available}</span>
+                      <span className="text-muted-foreground"> / {event.totalSeats} Plätze frei</span>
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
-            {!soldOut && (
+            {!soldOut && !isPast && (
               <button
                 onClick={(e) => { e.stopPropagation(); onSelect(); }}
                 className="group inline-flex items-center gap-2 bg-primary text-primary-foreground font-heading text-sm uppercase tracking-wider px-7 py-3 rounded-sm hover:bg-accent transition-all duration-200"
