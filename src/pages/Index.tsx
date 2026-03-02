@@ -564,9 +564,9 @@ const Index = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {/* Platzhalter-Videos – Video-IDs hier ersetzen */}
               {[
-                { id: "dQw4w9WgXcQ", label: "Video 1" },
-                { id: "dQw4w9WgXcQ", label: "Video 2" },
-                { id: "dQw4w9WgXcQ", label: "Video 3" },
+                { id: "-f2dO_LehcA", label: "Lange Nacht der Chöre 2024 – Frauenchor BORG St.Pölten" },
+                { id: "-fTy33vihkM", label: "Meine Lippen, sie küssen so heiss – Franz Lehár" },
+                { id: "AcoblNB3zLA", label: "Wenn zur Ruh die Glocken läuten – Gerhard Winkle" },
               ].map((video, i) => (
                 <div key={i} className="relative overflow-hidden rounded-sm bg-muted" style={{ aspectRatio: "16/9" }}>
                   <iframe
