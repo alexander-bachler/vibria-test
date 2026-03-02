@@ -150,6 +150,15 @@ const Index = () => {
   const [aTime, setATime] = useState("19:30");
   const [aDesc, setADesc] = useState("");
   const [aAdmission, setAAdmission] = useState("Freiwillige Spenden");
+  const [aImage, setAImage] = useState<string | null>(null);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setAImage(reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   const handleBook = (e: React.FormEvent) => {
     e.preventDefault();
@@ -186,6 +195,7 @@ const Index = () => {
       description: aDesc.trim(),
       admission: aAdmission.trim() || "Freiwillige Spenden",
       totalSeats: 40,
+      image: aImage || undefined,
     };
     setEvents((prev) => [...prev, newEvent]);
     setATitle("");
@@ -194,6 +204,7 @@ const Index = () => {
     setATime("19:30");
     setADesc("");
     setAAdmission("Freiwillige Spenden");
+    setAImage(null);
   };
 
   return (
@@ -456,69 +467,106 @@ const Index = () => {
               </h2>
 
               {/* Create Event */}
-              <div className="bg-card border border-border rounded p-6 mb-10 max-w-lg">
+              <div className="bg-card border border-border rounded p-6 mb-10">
                 <h3 className="text-lg uppercase text-foreground mb-4">
                   Neue Veranstaltung
                 </h3>
-                <form onSubmit={handleCreateEvent} className="space-y-3">
-                  <input
-                    type="text"
-                    placeholder="Titel"
-                    required
-                    maxLength={200}
-                    value={aTitle}
-                    onChange={(e) => setATitle(e.target.value)}
-                    className="w-full bg-background border border-input rounded px-3 py-2 font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Untertitel"
-                    maxLength={200}
-                    value={aSubtitle}
-                    onChange={(e) => setASubtitle(e.target.value)}
-                    className="w-full bg-background border border-input rounded px-3 py-2 font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                  <div className="grid grid-cols-2 gap-3">
+                <form onSubmit={handleCreateEvent} className="flex flex-col md:flex-row gap-6">
+                  {/* Left: Event info fields */}
+                  <div className="space-y-3 flex-1 max-w-lg">
                     <input
-                      type="date"
+                      type="text"
+                      placeholder="Titel"
                       required
-                      value={aDate}
-                      onChange={(e) => setADate(e.target.value)}
-                      className="bg-background border border-input rounded px-3 py-2 font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      maxLength={200}
+                      value={aTitle}
+                      onChange={(e) => setATitle(e.target.value)}
+                      className="w-full bg-background border border-input rounded px-3 py-2 font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                     <input
-                      type="time"
-                      required
-                      value={aTime}
-                      onChange={(e) => setATime(e.target.value)}
-                      className="bg-background border border-input rounded px-3 py-2 font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      type="text"
+                      placeholder="Untertitel"
+                      maxLength={200}
+                      value={aSubtitle}
+                      onChange={(e) => setASubtitle(e.target.value)}
+                      className="w-full bg-background border border-input rounded px-3 py-2 font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     />
+                    <div className="grid grid-cols-2 gap-3">
+                      <input
+                        type="date"
+                        required
+                        value={aDate}
+                        onChange={(e) => setADate(e.target.value)}
+                        className="bg-background border border-input rounded px-3 py-2 font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                      <input
+                        type="time"
+                        required
+                        value={aTime}
+                        onChange={(e) => setATime(e.target.value)}
+                        className="bg-background border border-input rounded px-3 py-2 font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </div>
+                    <textarea
+                      placeholder="Beschreibung"
+                      required
+                      maxLength={1000}
+                      value={aDesc}
+                      onChange={(e) => setADesc(e.target.value)}
+                      className="w-full bg-background border border-input rounded px-3 py-2 font-body text-sm h-24 resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Eintritt (z.B. Freiwillige Spenden)"
+                      maxLength={100}
+                      value={aAdmission}
+                      onChange={(e) => setAAdmission(e.target.value)}
+                      className="w-full bg-background border border-input rounded px-3 py-2 font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                    <p className="text-xs text-muted-foreground font-body">
+                      Sitzplätze werden automatisch auf 40 gesetzt.
+                    </p>
+                    <button
+                      type="submit"
+                      className="bg-primary text-primary-foreground font-heading uppercase tracking-wider px-6 py-2.5 rounded hover:bg-accent transition-colors"
+                    >
+                      Event anlegen
+                    </button>
                   </div>
-                  <textarea
-                    placeholder="Beschreibung"
-                    required
-                    maxLength={1000}
-                    value={aDesc}
-                    onChange={(e) => setADesc(e.target.value)}
-                    className="w-full bg-background border border-input rounded px-3 py-2 font-body text-sm h-24 resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Eintritt (z.B. Freiwillige Spenden)"
-                    maxLength={100}
-                    value={aAdmission}
-                    onChange={(e) => setAAdmission(e.target.value)}
-                    className="w-full bg-background border border-input rounded px-3 py-2 font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                  <p className="text-xs text-muted-foreground font-body">
-                    Sitzplätze werden automatisch auf 40 gesetzt.
-                  </p>
-                  <button
-                    type="submit"
-                    className="bg-primary text-primary-foreground font-heading uppercase tracking-wider px-6 py-2.5 rounded hover:bg-accent transition-colors"
-                  >
-                    Event anlegen
-                  </button>
+
+                  {/* Right: Image upload */}
+                  <div className="w-full md:w-64 flex-shrink-0">
+                    <label className="block text-xs uppercase tracking-wider text-muted-foreground font-body mb-2">
+                      Veranstaltungsfoto
+                    </label>
+                    <label className="block cursor-pointer border-2 border-dashed border-border rounded overflow-hidden hover:border-muted-foreground/50 transition-colors aspect-[4/3] bg-muted/30 relative">
+                      {aImage ? (
+                        <img src={aImage} alt="Vorschau" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
+                          <svg className="w-8 h-8 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+                          </svg>
+                          <span className="text-xs font-body">Foto hochladen</span>
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                    </label>
+                    {aImage && (
+                      <button
+                        type="button"
+                        onClick={() => setAImage(null)}
+                        className="text-xs text-muted-foreground hover:text-foreground font-body mt-2 transition-colors"
+                      >
+                        Foto entfernen
+                      </button>
+                    )}
+                  </div>
                 </form>
               </div>
 
