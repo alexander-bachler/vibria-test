@@ -2,6 +2,8 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import vibriaLogo from "@/assets/vibria-logo.svg";
 import eventImage from "@/assets/event-thomas.jpg";
+import eventMirtilli from "@/assets/event-mirtilli.jpg";
+import eventJungeTalente from "@/assets/event-junge-talente.jpg";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -39,6 +41,30 @@ const INITIAL_EVENTS: VEvent[] = [
       "Ein Abend voller Geschichten und Musik mit Thomas Franz-Riegler. Tauchen Sie ein in eine Welt aus Erzählungen und Klängen im intimen Souterrain-Ambiente des VIBRIA.",
     admission: "Freiwillige Spenden",
     totalSeats: 40,
+  },
+  {
+    id: "evt-2",
+    title: "ENSEMBLE MIRTILLI SUONANTI",
+    subtitle: "Komponistinnen aus alter Zeit und ihre Kollegen",
+    date: "2026-03-14",
+    time: "19:30",
+    description:
+      "Tauchen wir ein in die faszinierende Klangwelt von Renaissance und Barock! Das Ensemble Mirtilli suonanti entführt uns mit historischen Originalinstrumenten – darunter die zarte Traversflöte und die wundervoll klingende Viola da gamba. Im Mittelpunkt stehen die Werke brillanter Komponistinnen dieser Epoche. Maria Posch (Traversflöten), Maria Brüssing (Viola da gamba), Romina Mayer (Traversflöten).",
+    admission: "Freiwillige Spenden",
+    totalSeats: 40,
+    image: "mirtilli",
+  },
+  {
+    id: "evt-3",
+    title: "JUNGE TALENTE AM WERK",
+    subtitle: "Sologitarre und Sologesang",
+    date: "2026-02-14",
+    time: "18:00",
+    description:
+      "Junge, talentierte Musiker:innen betreten die Bühne – mit berührendem Sologesang und virtuoser Sologitarre. Talente: Salome Vladar, Hanna Zlattinger, Lena Marie Parb, Luisa Fernández-Flurschütz, Miriam Kickinger.",
+    admission: "Freiwillige Spenden",
+    totalSeats: 40,
+    image: "junge-talente",
   },
 ];
 
@@ -549,18 +575,21 @@ function EventCard({
       <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] lg:grid-cols-[340px_1fr]">
         {/* Left: Image with poster overlay */}
         <div className="relative h-64 md:h-auto overflow-hidden bg-muted">
-          {event.id === "evt-1" ? (
-            <img
-              src={eventImage}
-              alt={event.title}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-              <span className="text-6xl font-heading text-primary/20 uppercase">V</span>
-            </div>
-          )}
+          {(() => {
+            const imgMap: Record<string, string> = {
+              "evt-1": eventImage,
+              "mirtilli": eventMirtilli,
+              "junge-talente": eventJungeTalente,
+            };
+            const src = event.image ? imgMap[event.image] : (event.id === "evt-1" ? eventImage : undefined);
+            return src ? (
+              <img src={src} alt={event.title} className="w-full h-full object-cover" loading="lazy" />
+            ) : (
+              <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                <span className="text-6xl font-heading text-primary/20 uppercase">V</span>
+              </div>
+            );
+          })()}
           {/* Date overlay – like the flyer's bold date block */}
           <div className="absolute bottom-0 left-0 bg-primary/90 backdrop-blur-sm px-4 py-3 md:px-5 md:py-4">
             <div className="font-heading text-primary-foreground text-2xl md:text-3xl leading-none font-bold">
