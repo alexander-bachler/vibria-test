@@ -204,7 +204,7 @@ const Index = () => {
           <img
             src={vibriaLogo}
             alt="VIBRIA Kunst- und Kulturverein"
-            className="h-12 md:h-16 invert brightness-200 cursor-pointer"
+            className="h-12 md:h-16 brightness-0 invert cursor-pointer"
             onClick={() => { setIsAdmin(false); setSelectedEvent(null); setBookingSuccess(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           />
           <nav className="flex items-center gap-5 md:gap-7">
