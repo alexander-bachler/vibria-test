@@ -29,21 +29,24 @@ function generateSeats(): SeatDef[] {
   const seats: SeatDef[] = [];
   const seatW = 44;
   const seatH = 44;
-  const aisleWidth = 30;
+  const aisleWidth = 48; // wider center aisle = clear escape route
   const staggerOffset = seatW / 2;
   const maxPerSide = 3;
+  const totalWidth = maxPerSide * seatW * 2 + aisleWidth;
 
   for (let r = 0; r < ROW_CONFIG.length; r++) {
     const { row, seatsPerSide } = ROW_CONFIG[r];
     const isOddRow = r % 2 === 1;
     const rowOffsetX = isOddRow ? staggerOffset : 0;
 
-    // Center narrower rows
+    // Center narrower rows relative to full width
     const sideOffset = (maxPerSide - seatsPerSide) * seatW / 2;
 
     for (let side = 0; side < 2; side++) {
       for (let s = 0; s < seatsPerSide; s++) {
         const seatNum = side * seatsPerSide + s + 1;
+        // Center everything: offset so the whole layout is centered in SVG
+        const centerOffset = (totalWidth + staggerOffset) / 2;
         let cx: number;
         if (side === 0) {
           cx = rowOffsetX + sideOffset + s * seatW + seatW / 2;
@@ -78,8 +81,8 @@ export default function SeatMap({ bookedSeatIds, selectedSeatIds, onToggleSeat }
   const selectedSet = useMemo(() => new Set(selectedSeatIds), [selectedSeatIds]);
 
   const seatW = 44;
-  const aisleWidth = 30;
-  const svgWidth = 6 * seatW + aisleWidth + seatW; // 3+3 seats + aisle + stagger
+  const aisleWidth = 48;
+  const svgWidth = 6 * seatW + aisleWidth + seatW;
   const svgHeight = 7 * 44 + 80;
 
   const stageY = -30;
@@ -136,6 +139,39 @@ export default function SeatMap({ bookedSeatIds, selectedSeatIds, onToggleSeat }
           strokeWidth={1}
           strokeDasharray="4 3"
         />
+
+        {/* Center aisle / escape route */}
+        {(() => {
+          const aisleX = 3 * seatW + aisleWidth / 2;
+          return (
+            <g>
+              {/* Dashed aisle line */}
+              <line
+                x1={aisleX}
+                y1={seatsOffsetY - 10}
+                x2={aisleX}
+                y2={seatsOffsetY + 7 * 44 + 2}
+                className="stroke-destructive/30"
+                strokeWidth={1}
+                strokeDasharray="6 4"
+              />
+              {/* Aisle label */}
+              <text
+                x={aisleX}
+                y={seatsOffsetY + 7 * 44 + 16}
+                textAnchor="middle"
+                className="fill-destructive/50 text-[7px] font-body uppercase tracking-widest"
+              >
+                Fluchtweg
+              </text>
+              {/* Arrow indicators */}
+              <polygon
+                points={`${aisleX},${seatsOffsetY + 7 * 44 + 4} ${aisleX - 4},${seatsOffsetY + 7 * 44 - 2} ${aisleX + 4},${seatsOffsetY + 7 * 44 - 2}`}
+                className="fill-destructive/30"
+              />
+            </g>
+          );
+        })()}
 
         {/* Entrance indicator bottom-right */}
         <g transform={`translate(${svgWidth - 40}, ${seatsOffsetY + 7 * 44 - 4})`}>
