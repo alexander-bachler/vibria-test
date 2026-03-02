@@ -3,20 +3,15 @@ import { motion } from "framer-motion";
 
 // ─── Seat Layout ─────────────────────────────────────────────────────────────
 // Room: rectangular, stage at top, entrance at bottom-right
-// 40 seats arranged in 5 rows of 8, slight curve toward stage
+// 40 seats: 5 rows × 8 seats, split into 2 blocks of 4 with center aisle
+// Odd rows offset by half a seat width for staggered "theater" view
 
-const ROWS = [
-  { row: "A", seats: 6, y: 0, offsetX: 1 },   // closest to stage, narrower
-  { row: "B", seats: 8, y: 1, offsetX: 0 },
-  { row: "C", seats: 8, y: 2, offsetX: 0 },
-  { row: "D", seats: 8, y: 3, offsetX: 0 },
-  { row: "E", seats: 6, y: 4, offsetX: 1 },   // back row near entrance, narrower
-  { row: "F", seats: 4, y: 5, offsetX: 2 },   // very back, fewest
-];
-// Total: 6+8+8+8+6+4 = 40
+const NUM_ROWS = 5;
+const SEATS_PER_SIDE = 4; // 4 left + 4 right = 8 per row
+const TOTAL_SEATS = NUM_ROWS * SEATS_PER_SIDE * 2; // 40
 
 interface SeatDef {
-  id: string;    // e.g. "A1"
+  id: string;
   row: string;
   num: number;
   cx: number;
@@ -25,23 +20,37 @@ interface SeatDef {
 
 function generateSeats(): SeatDef[] {
   const seats: SeatDef[] = [];
-  const seatW = 44;
-  const seatH = 48;
-  const maxCols = 8;
+  const seatW = 42;
+  const seatH = 46;
+  const aisleWidth = 28; // center aisle gap
+  const staggerOffset = seatW / 2; // half-seat offset for odd rows
 
-  for (const r of ROWS) {
-    const totalRowWidth = r.seats * seatW;
-    const maxRowWidth = maxCols * seatW;
-    const startX = (maxRowWidth - totalRowWidth) / 2;
+  const totalWidth = SEATS_PER_SIDE * 2 * seatW + aisleWidth;
 
-    for (let i = 0; i < r.seats; i++) {
-      seats.push({
-        id: `${r.row}${i + 1}`,
-        row: r.row,
-        num: i + 1,
-        cx: startX + i * seatW + seatW / 2,
-        cy: r.y * seatH + seatH / 2,
-      });
+  for (let r = 0; r < NUM_ROWS; r++) {
+    const rowLabel = String.fromCharCode(65 + r); // A, B, C, D, E
+    const isOddRow = r % 2 === 1;
+    const rowOffsetX = isOddRow ? staggerOffset : 0;
+
+    for (let side = 0; side < 2; side++) {
+      for (let s = 0; s < SEATS_PER_SIDE; s++) {
+        const seatNum = side * SEATS_PER_SIDE + s + 1;
+        let cx: number;
+        if (side === 0) {
+          // Left block
+          cx = rowOffsetX + s * seatW + seatW / 2;
+        } else {
+          // Right block (after aisle)
+          cx = rowOffsetX + SEATS_PER_SIDE * seatW + aisleWidth + s * seatW + seatW / 2;
+        }
+        seats.push({
+          id: `${rowLabel}${seatNum}`,
+          row: rowLabel,
+          num: seatNum,
+          cx,
+          cy: r * seatH + seatH / 2,
+        });
+      }
     }
   }
   return seats;
@@ -61,8 +70,10 @@ export default function SeatMap({ bookedSeatIds, selectedSeatIds, onToggleSeat }
   const bookedSet = useMemo(() => new Set(bookedSeatIds), [bookedSeatIds]);
   const selectedSet = useMemo(() => new Set(selectedSeatIds), [selectedSeatIds]);
 
-  const svgWidth = 8 * 44;   // 352
-  const svgHeight = 6 * 48 + 80; // rows + stage area
+  const seatW = 42;
+  const aisleWidth = 28;
+  const svgWidth = 8 * seatW + aisleWidth + seatW; // extra padding for stagger
+  const svgHeight = 5 * 46 + 80;
 
   const stageY = -30;
   const seatsOffsetY = 50;
@@ -112,7 +123,7 @@ export default function SeatMap({ bookedSeatIds, selectedSeatIds, onToggleSeat }
           x={-6}
           y={seatsOffsetY - 18}
           width={svgWidth + 12}
-          height={6 * 48 + 24}
+          height={5 * 46 + 24}
           rx={8}
           className="fill-none stroke-border"
           strokeWidth={1}
@@ -120,7 +131,7 @@ export default function SeatMap({ bookedSeatIds, selectedSeatIds, onToggleSeat }
         />
 
         {/* Entrance indicator bottom-right */}
-        <g transform={`translate(${svgWidth - 40}, ${seatsOffsetY + 6 * 48 - 4})`}>
+        <g transform={`translate(${svgWidth - 40}, ${seatsOffsetY + 5 * 46 - 4})`}>
           <rect x={0} y={0} width={42} height={14} rx={3} className="fill-muted stroke-border" strokeWidth={1} />
           <text x={21} y={10.5} textAnchor="middle" className="fill-muted-foreground text-[7px] font-body">
             Eingang
