@@ -2,10 +2,9 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 
 // ─── Seat Layout ─────────────────────────────────────────────────────────────
-// Room based on sketch: rectangular, stage at top, stairs + entrance bottom-right
+// Room based on sketch: tall rectangle, stage at top, stairs bottom-right (inside room)
 // 40 seats: 3 left + 3 right per row, center aisle (Fluchtweg)
 // 6 full rows (6 seats) + 1 back row (4 seats) = 40
-// No stagger – seats directly aligned vertically
 
 const ROW_CONFIG = [
   { row: "A", seatsPerSide: 3 },
@@ -27,19 +26,17 @@ interface SeatDef {
 
 const SEAT_W = 42;
 const SEAT_H = 42;
-const AISLE_W = 52;
+const AISLE_W = 50;
 const MAX_PER_SIDE = 3;
 const NUM_ROWS = ROW_CONFIG.length;
 const ROOM_W = MAX_PER_SIDE * SEAT_W * 2 + AISLE_W;
-const ROOM_H = NUM_ROWS * SEAT_H;
+const ROOM_H = NUM_ROWS * SEAT_H + 60; // extra space at bottom for stairs
 
 function generateSeats(): SeatDef[] {
   const seats: SeatDef[] = [];
-
   for (let r = 0; r < ROW_CONFIG.length; r++) {
     const { row, seatsPerSide } = ROW_CONFIG[r];
     const sideOffset = (MAX_PER_SIDE - seatsPerSide) * SEAT_W / 2;
-
     for (let side = 0; side < 2; side++) {
       for (let s = 0; s < seatsPerSide; s++) {
         const seatNum = side * seatsPerSide + s + 1;
@@ -76,23 +73,18 @@ export default function SeatMap({ bookedSeatIds, selectedSeatIds, onToggleSeat }
   const bookedSet = useMemo(() => new Set(bookedSeatIds), [bookedSeatIds]);
   const selectedSet = useMemo(() => new Set(selectedSeatIds), [selectedSeatIds]);
 
-  const stageH = 30;
-  const stageGap = 20;
+  const stageH = 32;
+  const stageGap = 16;
   const seatsY = stageH + stageGap;
-  const stairsH = 40;
-  const techW = 60;
-  const techH = 30;
-  const totalH = seatsY + ROOM_H + stairsH + 30;
-  const margin = 16;
+  const margin = 14;
 
-  // Stairs area dimensions (bottom-right, outside room)
-  const stairsW = 50;
-  const stairsX = ROOM_W - stairsW;
-  const stairsY = seatsY + ROOM_H;
+  const totalH = seatsY + ROOM_H;
 
-  // Tech area (below stairs)
-  const techX = ROOM_W - techW - 5;
-  const techY = stairsY + stairsH + 4;
+  // Stairs inside room, bottom-right
+  const stairsW = 56;
+  const stairsH = 38;
+  const stairsX = ROOM_W - stairsW - 10;
+  const stairsTopY = seatsY + ROOM_H - stairsH - 10;
 
   return (
     <div className="w-full">
@@ -111,18 +103,18 @@ export default function SeatMap({ bookedSeatIds, selectedSeatIds, onToggleSeat }
 
       <svg
         viewBox={`${-margin} ${-margin} ${ROOM_W + margin * 2} ${totalH + margin * 2}`}
-        className="w-full max-w-sm mx-auto"
+        className="w-full max-w-xs mx-auto"
         role="img"
         aria-label="Sitzplan – wählen Sie Ihre Plätze"
       >
         {/* ── Stage ── */}
         <rect
-          x={ROOM_W * 0.08}
+          x={ROOM_W * 0.05}
           y={0}
-          width={ROOM_W * 0.84}
+          width={ROOM_W * 0.9}
           height={stageH}
-          rx={4}
-          className="fill-primary/15 stroke-primary/40"
+          rx={6}
+          className="fill-primary/12 stroke-primary/30"
           strokeWidth={1.5}
         />
         <text
@@ -130,52 +122,51 @@ export default function SeatMap({ bookedSeatIds, selectedSeatIds, onToggleSeat }
           y={stageH / 2 + 1}
           textAnchor="middle"
           dominantBaseline="middle"
-          className="fill-primary/60 text-[11px] font-heading uppercase tracking-[0.2em]"
+          className="fill-primary/50 text-[11px] font-heading uppercase tracking-[0.2em]"
         >
           Bühne
         </text>
 
         {/* ── Room outline ── */}
         <rect
-          x={-4}
-          y={seatsY - 10}
-          width={ROOM_W + 8}
-          height={ROOM_H + 16}
-          rx={6}
-          className="fill-none stroke-border"
-          strokeWidth={1}
-          strokeDasharray="4 3"
+          x={0}
+          y={seatsY - 8}
+          width={ROOM_W}
+          height={ROOM_H + 8}
+          rx={8}
+          className="fill-none stroke-foreground/20"
+          strokeWidth={1.5}
         />
 
-        {/* ── Center aisle (Fluchtweg) – solid gray fill ── */}
+        {/* ── Center aisle (Fluchtweg) – light gray fill ── */}
         <rect
           x={MAX_PER_SIDE * SEAT_W}
-          y={seatsY - 8}
+          y={seatsY - 6}
           width={AISLE_W}
-          height={ROOM_H + 12}
+          height={NUM_ROWS * SEAT_H + 8}
           rx={3}
-          className="fill-muted/60"
+          className="fill-muted/50"
         />
-        <text
-          x={MAX_PER_SIDE * SEAT_W + AISLE_W / 2}
-          y={seatsY + ROOM_H + 12}
-          textAnchor="middle"
-          className="fill-muted-foreground/50 text-[7px] font-body uppercase tracking-[0.15em]"
-        >
-          Fluchtweg
-        </text>
-        {/* Small arrows in aisle */}
-        {[0, 1, 2].map((i) => {
+        {/* Aisle arrows */}
+        {[0, 1, 2, 3].map((i) => {
           const ax = MAX_PER_SIDE * SEAT_W + AISLE_W / 2;
-          const ay = seatsY + 30 + i * (ROOM_H / 3);
+          const ay = seatsY + 20 + i * (NUM_ROWS * SEAT_H / 4);
           return (
             <polygon
               key={`arrow-${i}`}
-              points={`${ax},${ay + 8} ${ax - 4},${ay} ${ax + 4},${ay}`}
-              className="fill-muted-foreground/20"
+              points={`${ax},${ay + 7} ${ax - 3.5},${ay} ${ax + 3.5},${ay}`}
+              className="fill-muted-foreground/15"
             />
           );
         })}
+        <text
+          x={MAX_PER_SIDE * SEAT_W + AISLE_W / 2}
+          y={seatsY + NUM_ROWS * SEAT_H + 10}
+          textAnchor="middle"
+          className="fill-muted-foreground/40 text-[6.5px] font-body uppercase tracking-[0.12em]"
+        >
+          Fluchtweg
+        </text>
 
         {/* ── Seats ── */}
         {ALL_SEATS.map((seat, i) => {
@@ -233,68 +224,35 @@ export default function SeatMap({ bookedSeatIds, selectedSeatIds, onToggleSeat }
           );
         })}
 
-        {/* ── Stairs (bottom-right, outside room) ── */}
+        {/* ── Stairs (inside room, bottom-right) ── */}
         <rect
           x={stairsX}
-          y={stairsY + 8}
-          width={stairsW + 4}
-          height={stairsH - 4}
+          y={stairsTopY}
+          width={stairsW}
+          height={stairsH}
           rx={3}
-          className="fill-muted stroke-border"
+          className="fill-muted/70 stroke-foreground/15"
           strokeWidth={1}
         />
-        {/* Stair lines */}
+        {/* Step lines */}
         {[0, 1, 2, 3].map((i) => (
           <line
-            key={`stair-${i}`}
-            x1={stairsX + 6}
-            y1={stairsY + 14 + i * 7}
-            x2={stairsX + stairsW - 2}
-            y2={stairsY + 14 + i * 7}
-            className="stroke-muted-foreground/30"
+            key={`step-${i}`}
+            x1={stairsX + 5}
+            y1={stairsTopY + 7 + i * 8}
+            x2={stairsX + stairsW - 5}
+            y2={stairsTopY + 7 + i * 8}
+            className="stroke-foreground/20"
             strokeWidth={1}
           />
         ))}
         <text
-          x={stairsX + (stairsW + 4) / 2}
-          y={stairsY + stairsH + 10}
+          x={stairsX + stairsW / 2}
+          y={stairsTopY + stairsH + 10}
           textAnchor="middle"
-          className="fill-muted-foreground/60 text-[7px] font-body"
+          className="fill-muted-foreground/40 text-[6.5px] font-body"
         >
-          Stiegen
-        </text>
-
-        {/* ── Entrance arrow on right side ── */}
-        <g transform={`translate(${ROOM_W + 6}, ${stairsY - 10})`}>
-          <text
-            x={0}
-            y={0}
-            textAnchor="start"
-            className="fill-muted-foreground/50 text-[7px] font-body"
-            transform="rotate(90)"
-          >
-            Eingang →
-          </text>
-        </g>
-
-        {/* ── Technik area (bottom-center-right) ── */}
-        <rect
-          x={0}
-          y={stairsY + 8}
-          width={stairsX - 8}
-          height={18}
-          rx={3}
-          className="fill-muted/40 stroke-border"
-          strokeWidth={0.5}
-          strokeDasharray="3 2"
-        />
-        <text
-          x={(stairsX - 8) / 2}
-          y={stairsY + 20}
-          textAnchor="middle"
-          className="fill-muted-foreground/40 text-[7px] font-body"
-        >
-          Technik
+          Stiegen / Eingang
         </text>
       </svg>
 
