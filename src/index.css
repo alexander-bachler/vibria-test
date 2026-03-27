@@ -1,49 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
-
 @layer base {
   :root {
-    --background: 40 20% 97%;
-    --foreground: 200 40% 10%;
+    /* VIBRIA dark petrol #002633 -> HSL 195 100% 10% */
+    --background: 30 10% 96%;        /* VIBRIA clear white #f6f4f4 */
+    --foreground: 0 0% 5%;           /* VIBRIA Black #0d0d0d */
 
     --card: 0 0% 100%;
-    --card-foreground: 200 40% 10%;
+    --card-foreground: 0 0% 5%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 200 40% 10%;
+    --popover-foreground: 0 0% 5%;
 
-    --primary: 195 90% 16%;
-    --primary-foreground: 40 20% 97%;
+    --primary: 195 100% 10%;         /* VIBRIA dark petrol #002633 */
+    --primary-foreground: 30 10% 96%;
 
-    --secondary: 195 20% 90%;
-    --secondary-foreground: 195 90% 16%;
+    --secondary: 195 15% 88%;
+    --secondary-foreground: 195 100% 10%;
 
-    --muted: 195 10% 93%;
-    --muted-foreground: 200 10% 45%;
+    --muted: 0 0% 90%;               /* VIBRIA broken white #e5e5e5 */
+    --muted-foreground: 0 0% 40%;
 
-    --accent: 195 60% 25%;
-    --accent-foreground: 40 20% 97%;
+    --accent: 195 100% 15%;          /* VIBRIA medium petrol #00394d */
+    --accent-foreground: 30 10% 96%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 195 15% 85%;
-    --input: 195 15% 85%;
-    --ring: 195 90% 16%;
+    --border: 195 15% 82%;
+    --input: 195 15% 82%;
+    --ring: 196 100% 25%;            /* VIBRIA light petrol #006080 */
 
     --radius: 0.25rem;
 
-    --sidebar-background: 195 90% 16%;
-    --sidebar-foreground: 40 20% 97%;
-    --sidebar-primary: 40 20% 97%;
-    --sidebar-primary-foreground: 195 90% 16%;
-    --sidebar-accent: 195 60% 25%;
-    --sidebar-accent-foreground: 40 20% 97%;
-    --sidebar-border: 195 40% 30%;
-    --sidebar-ring: 40 20% 97%;
+    /* Earth tones */
+    --earth-dark: 16 14% 22%;        /* VIBRIA dark earth #403530 */
+    --earth-medium: 16 14% 31%;      /* VIBRIA medium earth #594a43 */
+    --earth-light: 16 14% 44%;       /* VIBRIA light earth #806a60 */
+
+    --sidebar-background: 195 100% 10%;
+    --sidebar-foreground: 30 10% 96%;
+    --sidebar-primary: 30 10% 96%;
+    --sidebar-primary-foreground: 195 100% 10%;
+    --sidebar-accent: 195 100% 15%;
+    --sidebar-accent-foreground: 30 10% 96%;
+    --sidebar-border: 195 40% 25%;
+    --sidebar-ring: 30 10% 96%;
 
     --success: 152 60% 40%;
     --success-foreground: 0 0% 100%;
@@ -63,5 +69,23 @@
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading font-bold tracking-tight;
+  }
+}
+
+@layer components {
+  .label {
+    @apply block text-xs uppercase tracking-wider text-muted-foreground font-body mb-1;
+  }
+
+  .field {
+    @apply w-full bg-background border border-input rounded px-3 py-2.5 font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring text-foreground;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-1 bg-primary text-primary-foreground font-heading text-sm uppercase tracking-wider px-5 py-2.5 rounded-sm hover:bg-accent transition-colors disabled:opacity-50 cursor-pointer;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-1 bg-muted text-foreground font-heading text-sm uppercase tracking-wider px-5 py-2.5 rounded-sm hover:bg-muted/80 transition-colors cursor-pointer border border-border;
   }
 }

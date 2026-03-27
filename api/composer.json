@@ -1,0 +1,25 @@
+{
+    "name": "vibria/api",
+    "description": "VIBRIA Kunst- und Kulturverein API",
+    "type": "project",
+    "require": {
+        "php": "^8.1",
+        "slim/slim": "^4.14",
+        "slim/psr7": "^1.7",
+        "firebase/php-jwt": "^6.10",
+        "intervention/image": "^3.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "Vibria\\": "src/"
+        }
+    },
+    "config": {
+        "audit": {
+            "abandoned": "report",
+            "ignore": {
+                "PKSA-y2cr-5h3j-g3ys": "Known advisory in dev environment, update when fix is available"
+            }
+        }
+    }
+}

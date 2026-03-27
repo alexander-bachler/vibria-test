@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# API sensitive files
+api/config/settings.local.php
+api/vendor/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
