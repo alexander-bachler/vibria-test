@@ -1,10 +1,13 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Mail } from "lucide-react";
+import { useState } from "react";
+import { AnimatePresence } from "framer-motion";
+import { Images } from "lucide-react";
 import { api } from "@/lib/api";
 import { getImageUrl } from "@/lib/imageUrl";
 import type { VEvent } from "@/lib/api";
+import ReservationModal from "@/components/ReservationModal";
 
 const quotes = [
   {
@@ -25,7 +28,7 @@ const teasers = [
   { to: "/kontakt", label: "Kontakt", desc: "Schreib uns" },
 ];
 
-function HomeEventCard({ event }: { event: VEvent }) {
+function HomeEventCard({ event, onReserve }: { event: VEvent; onReserve: (e: VEvent) => void }) {
   const dateObj = new Date(event.date);
   const day = dateObj.toLocaleDateString("de-AT", { day: "2-digit" });
   const month = dateObj.toLocaleDateString("de-AT", { month: "2-digit" });
@@ -33,13 +36,6 @@ function HomeEventCard({ event }: { event: VEvent }) {
 
   const available = event.total_seats - (event.reserved_seats ?? 0);
   const soldOut = available <= 0;
-
-  const mailSubject = encodeURIComponent(
-    `Reservierung: ${event.title} – ${day}.${month}.${year}`
-  );
-  const mailBody = encodeURIComponent(
-    `Liebe VIBRIA,\n\nIch möchte gerne Plätze für folgende Veranstaltung reservieren:\n\n${event.title}\n${day}.${month}.${year}, ${event.time} Uhr\n\nAnzahl der Plätze: \nName: \n\nMit freundlichen Grüßen`
-  );
 
   return (
     <motion.article
@@ -104,31 +100,14 @@ function HomeEventCard({ event }: { event: VEvent }) {
               <span className="inline-block bg-muted text-muted-foreground font-body text-xs px-3 py-1 rounded">
                 {event.admission}
               </span>
-              {soldOut ? (
-                <div>
-                  <span className="text-destructive font-heading text-xs uppercase tracking-wider">
-                    Ausverkauft
-                  </span>
-                </div>
-              ) : (
-                <div>
-                  <span className="text-sm font-body text-foreground">
-                    <span className="font-bold text-lg">{available}</span>
-                    <span className="text-muted-foreground"> / {event.total_seats} Plätze frei</span>
-                  </span>
-                </div>
-              )}
             </div>
-            {!soldOut && (
-              <a
-                href={`mailto:office@vibria.art?subject=${mailSubject}&body=${mailBody}`}
-                className="group inline-flex items-center gap-2 bg-primary text-primary-foreground font-heading text-sm uppercase tracking-wider px-7 py-3 rounded-sm hover:bg-accent transition-all duration-200"
-              >
-                <Mail size={14} />
-                Platz reservieren
-                <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
-              </a>
-            )}
+            <button
+              onClick={(e) => { e.stopPropagation(); onReserve(event); }}
+              className="group inline-flex items-center gap-2 bg-primary text-primary-foreground font-heading text-sm uppercase tracking-wider px-7 py-3 rounded-sm hover:bg-accent transition-all duration-200"
+            >
+              Platz reservieren
+              <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
+            </button>
           </div>
         </div>
       </div>
@@ -136,7 +115,7 @@ function HomeEventCard({ event }: { event: VEvent }) {
   );
 }
 
-function UpcomingPreview() {
+function UpcomingPreview({ onReserve }: { onReserve: (e: VEvent) => void }) {
   const { data: events = [] } = useQuery<VEvent[]>({
     queryKey: ["events"],
     queryFn: () => api.get("/api/events"),
@@ -159,14 +138,17 @@ function UpcomingPreview() {
   return (
     <div className="space-y-6">
       {upcoming.map((evt) => (
-        <HomeEventCard key={evt.id} event={evt} />
+        <HomeEventCard key={evt.id} event={evt} onReserve={onReserve} />
       ))}
     </div>
   );
 }
 
 export default function Home() {
+  const [reservingEvent, setReservingEvent] = useState<VEvent | null>(null);
+
   return (
+    <>
     <div>
       {/* ── Hero – Flyer-Stil ───────────────────────────────── */}
       <section className="relative overflow-hidden">
@@ -258,7 +240,7 @@ export default function Home() {
               Alle Termine →
             </Link>
           </div>
-          <UpcomingPreview />
+          <UpcomingPreview onReserve={setReservingEvent} />
         </div>
       </section>
 
@@ -361,5 +343,16 @@ export default function Home() {
         </div>
       </section>
     </div>
+
+    {/* Reservation Modal */}
+    <AnimatePresence>
+      {reservingEvent && (
+        <ReservationModal
+          event={reservingEvent}
+          onClose={() => setReservingEvent(null)}
+        />
+      )}
+    </AnimatePresence>
+    </>
   );
 }

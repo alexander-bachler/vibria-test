@@ -20,10 +20,14 @@ class EventRoutes
             $db = Database::getInstance($settings['db']);
             $model = new Event($db);
             $events = $model->findAll();
-            // Add reserved seat count per event
             $resModel = new Reservation($db);
+            $imgCountStmt = $db->prepare(
+                'SELECT COUNT(*) FROM event_images WHERE event_id = ?'
+            );
             foreach ($events as &$event) {
                 $event['reserved_seats'] = $resModel->countByEvent((int)$event['id']);
+                $imgCountStmt->execute([(int)$event['id']]);
+                $event['gallery_count'] = (int)$imgCountStmt->fetchColumn();
             }
             $response->getBody()->write(json_encode($events));
             return $response->withHeader('Content-Type', 'application/json');
@@ -39,6 +43,18 @@ class EventRoutes
                 return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }
             $response->getBody()->write(json_encode($event));
+            return $response->withHeader('Content-Type', 'application/json');
+        });
+
+        // Public: gallery images for a specific event
+        $app->get('/api/events/{id}/images', function (Request $request, Response $response, array $args) use ($settings) {
+            $db = Database::getInstance($settings['db']);
+            $stmt = $db->prepare(
+                'SELECT id, image_path, sort_order FROM event_images WHERE event_id = ? ORDER BY sort_order ASC'
+            );
+            $stmt->execute([(int)$args['id']]);
+            $images = $stmt->fetchAll();
+            $response->getBody()->write(json_encode($images));
             return $response->withHeader('Content-Type', 'application/json');
         });
 

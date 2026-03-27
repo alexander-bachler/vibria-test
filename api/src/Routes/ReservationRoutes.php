@@ -13,6 +13,19 @@ use Vibria\Services\Database;
 
 class ReservationRoutes
 {
+    // Human-readable zone labels for confirmation emails
+    private const ZONE_LABELS = [
+        'vorne-links'   => 'Vorne Links',
+        'vorne-mitte'   => 'Vorne Mitte',
+        'vorne-rechts'  => 'Vorne Rechts',
+        'mitte-links'   => 'Mitte Links',
+        'mitte-mitte'   => 'Mitte Mitte',
+        'mitte-rechts'  => 'Mitte Rechts',
+        'hinten-links'  => 'Hinten Links',
+        'hinten-mitte'  => 'Hinten Mitte',
+        'hinten-rechts' => 'Hinten Rechts',
+    ];
+
     public static function register(App $app, array $settings): void
     {
         // Public: create reservation
@@ -25,7 +38,7 @@ class ReservationRoutes
                 return $response->withHeader('Content-Type', 'application/json');
             }
 
-            $required = ['event_id', 'name', 'email', 'seats'];
+            $required = ['event_id', 'name', 'email', 'phone', 'seats'];
             foreach ($required as $field) {
                 if (empty($data[$field])) {
                     $response->getBody()->write(json_encode(['error' => "Field '$field' is required"]));
@@ -46,26 +59,63 @@ class ReservationRoutes
             $reserved = $resModel->countByEvent((int)$data['event_id']);
             $available = $event['total_seats'] - $reserved;
 
-            if ($data['seats'] > $available) {
+            if ((int)$data['seats'] > $available) {
                 $response->getBody()->write(json_encode(['error' => 'Not enough seats available']));
                 return $response->withStatus(409)->withHeader('Content-Type', 'application/json');
             }
 
             $id = $resModel->create($data);
 
-            // Send confirmation email
+            // Confirmation email
+            $zoneLabel = self::ZONE_LABELS[$data['seating_zone'] ?? ''] ?? ($data['seating_zone'] ?? 'Kein Bereich angegeben');
+            $dateFormatted = date('d.m.Y', strtotime($event['date']));
             $to = $data['email'];
             $subject = 'Reservierungsbestätigung – ' . $event['title'];
-            $body = "Liebe/r " . $data['name'] . ",\n\n" .
-                "Ihre Reservierung für \"" . $event['title'] . "\" am " . $event['date'] . " um " . $event['time'] . " Uhr wurde entgegengenommen.\n\n" .
-                "Anzahl der Plätze: " . $data['seats'] . "\n\n" .
-                "Bitte nehmen Sie Ihren Platz spätestens 15 Minuten vor Beginn ein.\n\n" .
-                "Mit freundlichen Grüßen\nVIBRIA | Kunst- und Kulturverein\noffice@vibria.art";
+            $body = "Liebe/r " . $data['name'] . ",\n\n"
+                . "Ihre Reservierung für \"" . $event['title'] . "\" wurde entgegengenommen.\n\n"
+                . "Datum: " . $dateFormatted . ", " . $event['time'] . " Uhr\n"
+                . "Anzahl der Plätze: " . $data['seats'] . "\n"
+                . "Sitzbereich: " . $zoneLabel . "\n\n"
+                . "Bitte nehmen Sie Ihren Platz spätestens 15 Minuten vor Beginn ein.\n"
+                . "Nicht abgeholte Reservierungen werden danach freigegeben.\n\n"
+                . "Mit freundlichen Grüßen\n"
+                . "VIBRIA | Kunst- und Kulturverein\n"
+                . "office@vibria.art";
             $headers = "From: " . ($settings['admin_email'] ?? 'office@vibria.art') . "\r\nReply-To: office@vibria.art\r\n";
             @mail($to, $subject, $body, $headers);
 
             $response->getBody()->write(json_encode(['id' => $id, 'message' => 'Reservation created']));
             return $response->withStatus(201)->withHeader('Content-Type', 'application/json');
+        });
+
+        // Public: get seat counts per zone for an event
+        $app->get('/api/events/{id}/zones', function (Request $request, Response $response, array $args) use ($settings) {
+            $db = Database::getInstance($settings['db']);
+            $resModel = new Reservation($db);
+            $zones = $resModel->countByZone((int)$args['id']);
+
+            // Also fetch total_seats so the client can compute availability per zone
+            $eventModel = new Event($db);
+            $event = $eventModel->findById((int)$args['id']);
+            $totalSeats = $event ? (int)$event['total_seats'] : 40;
+
+            // Each zone gets an equal share of the total seats (40 seats / 9 zones ≈ 4-5 per zone)
+            $seatsPerZone = (int)ceil($totalSeats / 9);
+
+            $result = [];
+            $allZones = array_keys(self::ZONE_LABELS);
+            foreach ($allZones as $zone) {
+                $reserved = $zones[$zone] ?? 0;
+                $result[$zone] = [
+                    'reserved'   => $reserved,
+                    'capacity'   => $seatsPerZone,
+                    'available'  => max(0, $seatsPerZone - $reserved),
+                    'label'      => self::ZONE_LABELS[$zone],
+                ];
+            }
+
+            $response->getBody()->write(json_encode($result));
+            return $response->withHeader('Content-Type', 'application/json');
         });
 
         $auth = new AuthMiddleware($settings['jwt_secret']);

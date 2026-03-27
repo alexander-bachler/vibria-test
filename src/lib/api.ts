@@ -66,6 +66,7 @@ export interface VEvent {
   total_seats: number;
   reserved_seats?: number;
   image_path: string | null;
+  gallery_count?: number;
   is_published: number;
   created_at: string;
 }
@@ -103,6 +104,8 @@ export interface Reservation {
   event_date?: string;
   name: string;
   email: string;
+  phone: string | null;
+  seating_zone: string | null;
   seats: number;
   status: string;
   created_at: string;
@@ -116,6 +119,12 @@ export interface ContactMessage {
   message: string;
   is_read: number;
   created_at: string;
+}
+
+export interface EventImage {
+  id: number;
+  image_path: string;
+  sort_order: number;
 }
 
 export interface AdminStats {

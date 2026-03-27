@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Mail, Mic } from "lucide-react";
 import { api } from "@/lib/api";
@@ -26,10 +26,30 @@ export default function Kontakt() {
     }
   };
 
-  const NEWSLETTER_EMBED = `<iframe data-w-type="embedded" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://sq5z8.mjt.lu/wgt/sq5z8/xy7v/form?c=300eedbb" width="100%" style="height: 0;"></iframe>`;
+  const newsletterRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = newsletterRef.current;
+    if (!container) return;
+
+    const existingScript = document.querySelector(
+      'script[src="https://app.mailjet.com/pas-nc-pop-in-v1.js"]'
+    );
+    if (existingScript) existingScript.remove();
+
+    const script = document.createElement("script");
+    script.src = "https://app.mailjet.com/pas-nc-pop-in-v1.js";
+    script.type = "text/javascript";
+    document.body.appendChild(script);
+
+    return () => {
+      script.remove();
+    };
+  }, []);
 
   return (
     <div className="container mx-auto px-4 md:px-6 py-10 md:py-16 space-y-16">
+      {/* Seitentitel */}
       <motion.h1
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -58,121 +78,104 @@ export default function Kontakt() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Honeypot */}
               <input type="text" name="website" value={form.website} onChange={handleChange} className="hidden" tabIndex={-1} autoComplete="off" />
-
               <div>
-                <label className="block text-xs uppercase tracking-wider text-muted-foreground font-body mb-1">
-                  Name *
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  maxLength={100}
-                  value={form.name}
-                  onChange={handleChange}
-                  className="w-full bg-card border border-input rounded px-3 py-2.5 font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                />
+                <label className="block text-xs uppercase tracking-wider text-muted-foreground font-body mb-1">Name *</label>
+                <input type="text" name="name" required maxLength={100} value={form.name} onChange={handleChange}
+                  className="w-full bg-card border border-input rounded px-3 py-2.5 font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
               </div>
               <div>
-                <label className="block text-xs uppercase tracking-wider text-muted-foreground font-body mb-1">
-                  E-Mail *
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  required
-                  maxLength={255}
-                  value={form.email}
-                  onChange={handleChange}
-                  className="w-full bg-card border border-input rounded px-3 py-2.5 font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                />
+                <label className="block text-xs uppercase tracking-wider text-muted-foreground font-body mb-1">E-Mail *</label>
+                <input type="email" name="email" required maxLength={255} value={form.email} onChange={handleChange}
+                  className="w-full bg-card border border-input rounded px-3 py-2.5 font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
               </div>
               <div>
-                <label className="block text-xs uppercase tracking-wider text-muted-foreground font-body mb-1">
-                  Betreff
-                </label>
-                <input
-                  type="text"
-                  name="subject"
-                  maxLength={200}
-                  value={form.subject}
-                  onChange={handleChange}
-                  className="w-full bg-card border border-input rounded px-3 py-2.5 font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                />
+                <label className="block text-xs uppercase tracking-wider text-muted-foreground font-body mb-1">Betreff</label>
+                <input type="text" name="subject" maxLength={200} value={form.subject} onChange={handleChange}
+                  className="w-full bg-card border border-input rounded px-3 py-2.5 font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
               </div>
               <div>
-                <label className="block text-xs uppercase tracking-wider text-muted-foreground font-body mb-1">
-                  Nachricht *
-                </label>
-                <textarea
-                  name="message"
-                  required
-                  maxLength={2000}
-                  rows={5}
-                  value={form.message}
-                  onChange={handleChange}
-                  className="w-full bg-card border border-input rounded px-3 py-2.5 font-body text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-                />
+                <label className="block text-xs uppercase tracking-wider text-muted-foreground font-body mb-1">Nachricht *</label>
+                <textarea name="message" required maxLength={2000} rows={5} value={form.message} onChange={handleChange}
+                  className="w-full bg-card border border-input rounded px-3 py-2.5 font-body text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring" />
               </div>
               {status === "error" && (
                 <p className="text-destructive font-body text-sm">{errorMsg}</p>
               )}
-              <button
-                type="submit"
-                disabled={status === "sending"}
-                className="w-full bg-primary text-primary-foreground font-heading text-sm uppercase tracking-wider py-3 rounded-sm hover:bg-accent transition-colors disabled:opacity-50"
-              >
+              <button type="submit" disabled={status === "sending"}
+                className="w-full bg-primary text-primary-foreground font-heading text-sm uppercase tracking-wider py-3 rounded-sm hover:bg-accent transition-colors disabled:opacity-50">
                 {status === "sending" ? "Wird gesendet…" : "Nachricht senden"}
               </button>
             </form>
           )}
         </section>
 
-        {/* Address + Map */}
+        {/* Adresse & Karte */}
         <section>
           <h2 className="text-xl uppercase text-foreground mb-5">Adresse & Anfahrt</h2>
-          <div className="flex gap-3 mb-5">
+          <div className="flex gap-3 mb-3">
             <MapPin size={18} className="text-primary mt-0.5 flex-shrink-0" />
             <div className="font-body text-sm text-muted-foreground">
-              <p className="text-foreground font-medium mb-1">VIBRIA | Kunst- und Kulturverein</p>
-              <p>Reichsapfelgasse 1/30<br />1150 Wien, Österreich</p>
-              <p className="text-xs mt-1">Blaue Türe rechts vom Haustor</p>
-              <div className="flex gap-3 mt-3">
-                <a href="https://maps.app.goo.gl/YokJDNCi8jyqvwfr5" target="_blank" rel="noopener noreferrer"
-                  className="text-primary hover:text-accent text-xs underline transition-colors">
-                  Google Maps
-                </a>
-                <a href="https://www.openstreetmap.org/#map=19/48.186588/16.324632" target="_blank" rel="noopener noreferrer"
-                  className="text-primary hover:text-accent text-xs underline transition-colors">
-                  OpenStreetMap
-                </a>
-              </div>
+              <p className="text-foreground font-medium mb-0.5">VIBRIA | Kunst- und Kulturverein</p>
+              <p>Reichsapfelgasse 1/30, 1150 Wien</p>
+              <p className="text-xs mt-0.5">Blaue Türe rechts vom Haustor</p>
             </div>
           </div>
-
-          <div className="rounded-sm overflow-hidden border border-border mb-6" style={{ height: 260 }}>
+          <div className="flex gap-3 mb-3">
+            <Mail size={18} className="text-primary mt-0.5 flex-shrink-0" />
+            <a href="mailto:office@vibria.art" className="font-body text-sm text-foreground hover:text-primary transition-colors">
+              office@vibria.art
+            </a>
+          </div>
+          <div className="flex gap-3 mb-4 font-body text-xs">
+            <a href="https://maps.app.goo.gl/YokJDNCi8jyqvwfr5" target="_blank" rel="noopener noreferrer"
+              className="text-primary hover:text-accent underline transition-colors">
+              Google Maps
+            </a>
+            <a href="https://www.openstreetmap.org/#map=19/48.186588/16.324632" target="_blank" rel="noopener noreferrer"
+              className="text-primary hover:text-accent underline transition-colors">
+              OpenStreetMap
+            </a>
+          </div>
+          <div className="rounded-sm overflow-hidden border border-border">
             <iframe
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d665.7!2d16.3237!3d48.18659!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x476d07cdc1e90ea5%3A0x0!2sReichsapfelgasse%201%2C%201150%20Wien!5e0!3m2!1sde!2sat!4v1700000000000"
               width="100%"
-              height="100%"
-              style={{ border: 0 }}
+              height="220"
+              style={{ border: 0, display: "block" }}
               allowFullScreen
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
               title="Standort VIBRIA"
             />
           </div>
-
-          <div className="flex gap-3">
-            <Mail size={18} className="text-primary mt-0.5 flex-shrink-0" />
-            <a href="mailto:office@vibria.art" className="font-body text-sm text-foreground hover:text-primary transition-colors">
-              office@vibria.art
-            </a>
-          </div>
+          <p className="font-body text-xs text-muted-foreground mt-3">
+            <strong className="text-foreground">Öffentliche Anbindung:</strong>{" "}
+            U4 Meidling Hauptstraße · U4 Schönbrunn · 57A Hollergasse
+          </p>
         </section>
       </div>
+
+      {/* Newsletter */}
+      <section>
+        <h2 className="text-xl uppercase text-foreground mb-3 text-center">Newsletter</h2>
+        <p className="font-body text-sm text-muted-foreground mb-6 max-w-md mx-auto text-center">
+          Bleib auf dem Laufenden! Melde dich an und erfahre als Erste:r von neuen Veranstaltungen.
+        </p>
+        <div className="max-w-xl mx-auto" ref={newsletterRef}>
+          <iframe
+            data-w-type="embedded"
+            frameBorder="0"
+            scrolling="no"
+            marginHeight={0}
+            marginWidth={0}
+            src="https://sq5z8.mjt.lu/wgt/sq5z8/xy7v/form?c=300eedbb"
+            width="100%"
+            style={{ minHeight: 450 }}
+            title="Newsletter Anmeldung"
+          />
+        </div>
+      </section>
 
       {/* Künstleranfrage */}
       <section className="bg-primary rounded-sm p-8 md:p-12">
@@ -199,19 +202,6 @@ export default function Kontakt() {
         </div>
       </section>
 
-      {/* Newsletter */}
-      <section>
-        <h2 className="text-xl uppercase text-foreground mb-4">Newsletter</h2>
-        <p className="font-body text-sm text-muted-foreground mb-6 max-w-lg">
-          Bleib auf dem Laufenden! Melde dich für unseren Newsletter an und erfahre als Erste:r von
-          neuen Veranstaltungen.
-        </p>
-        <div
-          className="max-w-lg"
-          dangerouslySetInnerHTML={{ __html: NEWSLETTER_EMBED }}
-        />
-        <script src="https://app.mailjet.com/pas-nc-pop-in-v1.js" type="text/javascript" />
-      </section>
     </div>
   );
 }

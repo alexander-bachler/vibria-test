@@ -34,16 +34,37 @@ class Reservation
     public function create(array $data): int
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO reservations (event_id, name, email, seats, status) VALUES (:event_id, :name, :email, :seats, :status)'
+            'INSERT INTO reservations (event_id, name, email, phone, seating_zone, seats, status)
+             VALUES (:event_id, :name, :email, :phone, :seating_zone, :seats, :status)'
         );
         $stmt->execute([
-            'event_id' => $data['event_id'],
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'seats' => $data['seats'] ?? 1,
-            'status' => 'pending',
+            'event_id'     => $data['event_id'],
+            'name'         => $data['name'],
+            'email'        => $data['email'],
+            'phone'        => $data['phone'] ?? null,
+            'seating_zone' => $data['seating_zone'] ?? null,
+            'seats'        => $data['seats'] ?? 1,
+            'status'       => 'pending',
         ]);
         return (int)$this->db->lastInsertId();
+    }
+
+    /** Returns seat count grouped by seating_zone for a given event. */
+    public function countByZone(int $eventId): array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT seating_zone, SUM(seats) AS reserved
+             FROM reservations
+             WHERE event_id = ? AND status != 'cancelled' AND seating_zone IS NOT NULL
+             GROUP BY seating_zone"
+        );
+        $stmt->execute([$eventId]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $result = [];
+        foreach ($rows as $row) {
+            $result[$row['seating_zone']] = (int)$row['reserved'];
+        }
+        return $result;
     }
 
     public function updateStatus(int $id, string $status): bool
