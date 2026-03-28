@@ -38,7 +38,7 @@ class ReservationRoutes
                 return $response->withHeader('Content-Type', 'application/json');
             }
 
-            $required = ['event_id', 'name', 'email', 'phone', 'seats'];
+            $required = ['event_id', 'name', 'email', 'seats'];
             foreach ($required as $field) {
                 if (empty($data[$field])) {
                     $response->getBody()->write(json_encode(['error' => "Field '$field' is required"]));

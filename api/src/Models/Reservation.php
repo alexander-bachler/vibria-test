@@ -37,11 +37,12 @@ class Reservation
             'INSERT INTO reservations (event_id, name, email, phone, seating_zone, seats, status)
              VALUES (:event_id, :name, :email, :phone, :seating_zone, :seats, :status)'
         );
+        $phone = isset($data['phone']) ? trim((string)$data['phone']) : '';
         $stmt->execute([
             'event_id'     => $data['event_id'],
             'name'         => $data['name'],
             'email'        => $data['email'],
-            'phone'        => $data['phone'] ?? null,
+            'phone'        => $phone === '' ? null : $phone,
             'seating_zone' => $data['seating_zone'] ?? null,
             'seats'        => $data['seats'] ?? 1,
             'status'       => 'pending',

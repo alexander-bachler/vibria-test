@@ -161,72 +161,85 @@ export default function Veranstaltungen() {
     .sort((a, b) => b.date.localeCompare(a.date));
 
   return (
-    <div className="container mx-auto px-4 md:px-6 py-8 md:py-12">
-      <motion.h1
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-3xl md:text-5xl uppercase text-foreground mb-8"
-      >
-        Veranstaltungen
-      </motion.h1>
+    <div>
+      {/* Page Header */}
+      <div className="container mx-auto px-4 md:px-6 pt-10 md:pt-16 pb-6 md:pb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <span className="font-body text-xs uppercase tracking-[0.3em] text-primary mb-3 block">
+            Programm & Termine
+          </span>
+          <h1 className="text-3xl md:text-5xl uppercase text-foreground leading-[0.95]">
+            Veranstaltungen
+          </h1>
+        </motion.div>
+      </div>
 
       {/* Upcoming Events */}
-      <section id="aktuell">
-        <h2 className="text-2xl md:text-3xl text-foreground uppercase mb-6">
-          Aktuelles Programm
-        </h2>
+      <div className="bg-card border-y border-border">
+        <div className="container mx-auto px-4 md:px-6 py-10 md:py-14">
+          <section id="aktuell">
+            <h2 className="font-heading text-xs uppercase tracking-wider text-primary mb-6">
+              Aktuelles Programm
+            </h2>
 
-        {isLoading ? (
-          <div className="space-y-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-52 bg-muted rounded-sm animate-pulse" />
-            ))}
-          </div>
-        ) : upcoming.length > 0 ? (
-          <div className="space-y-6">
-            {upcoming.map((evt) => (
-              <EventCard
-                key={evt.id}
-                event={evt}
-                onReserve={setReservingEvent}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="text-muted-foreground font-body py-4">
-            Derzeit sind keine Veranstaltungen geplant. Schau bald wieder vorbei!
-          </p>
-        )}
-      </section>
+            {isLoading ? (
+              <div className="space-y-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-52 bg-muted rounded-sm animate-pulse" />
+                ))}
+              </div>
+            ) : upcoming.length > 0 ? (
+              <div className="space-y-6">
+                {upcoming.map((evt) => (
+                  <EventCard
+                    key={evt.id}
+                    event={evt}
+                    onReserve={setReservingEvent}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground font-body py-4">
+                Derzeit sind keine Veranstaltungen geplant. Schau bald wieder vorbei!
+              </p>
+            )}
+          </section>
+        </div>
+      </div>
 
       {/* Archive */}
       {past.length > 0 && (
-        <section className="mt-16">
-          <button
-            onClick={() => setShowArchive((v) => !v)}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground font-heading text-sm uppercase tracking-widest mb-2 transition-colors"
-          >
-            {showArchive ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            Vergangene Veranstaltungen ({past.length})
-          </button>
+        <div className="container mx-auto px-4 md:px-6 py-12 md:py-16">
+          <section>
+            <button
+              onClick={() => setShowArchive((v) => !v)}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground font-heading text-sm uppercase tracking-widest mb-2 transition-colors"
+            >
+              {showArchive ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              Vergangene Veranstaltungen ({past.length})
+            </button>
 
-          <AnimatePresence>
-            {showArchive && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="mt-4 space-y-6">
-                  {past.map((evt) => (
-                    <EventCard key={evt.id} event={evt} isPast />
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </section>
+            <AnimatePresence>
+              {showArchive && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-4 space-y-6">
+                    {past.map((evt) => (
+                      <EventCard key={evt.id} event={evt} isPast />
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </section>
+        </div>
       )}
 
       {/* Reservation Modal */}

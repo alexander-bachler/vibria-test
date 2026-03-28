@@ -11,12 +11,12 @@ import ReservationModal from "@/components/ReservationModal";
 
 const quotes = [
   {
-    text: "Kunst wird erst dann interessant, wenn wir vor irgendetwas stehen, das wir nicht gleich restlos erklären können.",
-    author: "Christoph Schlingensief",
+    text: "Ohne Theater gäbe es direkten Verkehr zwischen einem Menschen und seinem Schicksal.",
+    author: "Elias Canetti",
   },
   {
-    text: "Ich war schon überall auf der Welt und habe noch nie eine Statue eines Kritikers gesehen.",
-    author: "Leonard Bernstein",
+    text: "Die Musik ist die höchste aller Künste, weil sie am wenigsten Abbild der Wirklichkeit ist.",
+    author: "Richard Wagner",
   },
 ];
 
@@ -226,6 +226,31 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Quotes (above upcoming events) ──────── */}
+      <section className="border-b border-border bg-muted/30">
+        <div className="container mx-auto px-4 md:px-6 py-10 md:py-14">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+            {quotes.map((q, i) => (
+              <motion.blockquote
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15 }}
+                className="border-l-2 border-primary pl-5"
+              >
+                <p className="font-body text-sm md:text-base text-foreground/80 leading-relaxed italic mb-3">
+                  „{q.text}“
+                </p>
+                <cite className="font-heading text-xs uppercase tracking-widest text-primary not-italic">
+                  — {q.author}
+                </cite>
+              </motion.blockquote>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Nächste Veranstaltungen ─────────────── */}
       <section className="bg-card border-b border-border">
         <div className="container mx-auto px-4 md:px-6 py-10 md:py-12">
@@ -241,31 +266,6 @@ export default function Home() {
             </Link>
           </div>
           <UpcomingPreview onReserve={setReservingEvent} />
-        </div>
-      </section>
-
-      {/* ── Quotes ──────────────────────────────── */}
-      <section className="border-b border-border">
-        <div className="container mx-auto px-4 md:px-6 py-12 md:py-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-            {quotes.map((q, i) => (
-              <motion.blockquote
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15 }}
-                className="border-l-2 border-primary pl-5"
-              >
-                <p className="font-body text-sm md:text-base text-foreground/80 leading-relaxed italic mb-3">
-                  „{q.text}"
-                </p>
-                <cite className="font-heading text-xs uppercase tracking-widest text-primary not-italic">
-                  — {q.author}
-                </cite>
-              </motion.blockquote>
-            ))}
-          </div>
         </div>
       </section>
 

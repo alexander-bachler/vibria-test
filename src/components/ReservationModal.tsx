@@ -215,11 +215,10 @@ export default function ReservationModal({ event, onClose }: ReservationModalPro
                   </div>
                   <div>
                     <label className="block text-xs font-body uppercase tracking-wider text-muted-foreground mb-1.5">
-                      Handynummer <span className="text-destructive">*</span>
+                      Handynummer
                     </label>
                     <input
                       type="tel"
-                      required
                       maxLength={30}
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
