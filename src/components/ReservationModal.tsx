@@ -24,7 +24,30 @@ const ZONE_LABELS: Record<ZoneKey, string> = {
   "hinten-rechts": "Hinten Rechts",
 };
 
+/** Build an array of YYYY-MM-DD strings from start to end (inclusive). */
+function getEventDays(start: string, end: string | null): string[] {
+  if (!end || end <= start) return [start];
+  const days: string[] = [];
+  const d = new Date(start + "T00:00:00");
+  const last = new Date(end + "T00:00:00");
+  while (d <= last) {
+    days.push(d.toISOString().slice(0, 10));
+    d.setDate(d.getDate() + 1);
+  }
+  return days;
+}
+
+function formatDayOption(dateStr: string): string {
+  return new Date(dateStr + "T00:00:00").toLocaleDateString("de-AT", {
+    weekday: "short", day: "2-digit", month: "long", year: "numeric",
+  });
+}
+
 export default function ReservationModal({ event, onClose }: ReservationModalProps) {
+  const isMultiDay = !!event.end_date && event.end_date > event.date;
+  const eventDays = getEventDays(event.date, event.end_date);
+
+  const [selectedDay, setSelectedDay] = useState<string>(eventDays[0]);
   const [selectedZone, setSelectedZone] = useState<ZoneKey | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -35,14 +58,21 @@ export default function ReservationModal({ event, onClose }: ReservationModalPro
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const dateObj = new Date(event.date);
-  const dateStr = dateObj.toLocaleDateString("de-AT", {
-    weekday: "long", day: "2-digit", month: "long", year: "numeric",
-  });
+  const dateObj = new Date(event.date + "T00:00:00");
+  const dateStr = isMultiDay
+    ? `${dateObj.toLocaleDateString("de-AT", { day: "2-digit", month: "long" })} – ${new Date(event.end_date + "T00:00:00").toLocaleDateString("de-AT", { day: "2-digit", month: "long", year: "numeric" })}`
+    : dateObj.toLocaleDateString("de-AT", {
+        weekday: "long", day: "2-digit", month: "long", year: "numeric",
+      });
 
   const { data: zones = {} } = useQuery<Record<string, ZoneData>>({
-    queryKey: ["event-zones", event.id],
-    queryFn: () => api.get(`/api/events/${event.id}/zones`),
+    queryKey: ["event-zones", event.id, isMultiDay ? selectedDay : null],
+    queryFn: () => {
+      const url = isMultiDay
+        ? `/api/events/${event.id}/zones?date=${selectedDay}`
+        : `/api/events/${event.id}/zones`;
+      return api.get(url);
+    },
     refetchInterval: 30_000, // refresh every 30s to show live availability
   });
 
@@ -74,6 +104,7 @@ export default function ReservationModal({ event, onClose }: ReservationModalPro
         phone: phone.trim(),
         seats,
         seating_zone: selectedZone,
+        reservation_date: isMultiDay ? selectedDay : null,
         website: honeypot,
       });
       setSuccess(true);
@@ -139,6 +170,9 @@ export default function ReservationModal({ event, onClose }: ReservationModalPro
                   Bitte nehmen Sie Ihren Platz spätestens 15 Minuten vor Beginn ein.
                 </p>
                 <div className="mt-6 space-y-2 font-body text-sm bg-muted/40 rounded p-4 max-w-xs mx-auto text-left">
+                  {isMultiDay && (
+                    <div><span className="text-muted-foreground">Tag:</span> <span className="font-medium">{formatDayOption(selectedDay)}</span></div>
+                  )}
                   <div><span className="text-muted-foreground">Bereich:</span> <span className="font-medium">{selectedZone ? ZONE_LABELS[selectedZone] : ""}</span></div>
                   <div><span className="text-muted-foreground">Plätze:</span> <span className="font-medium">{seats}</span></div>
                 </div>
@@ -151,6 +185,34 @@ export default function ReservationModal({ event, onClose }: ReservationModalPro
               </motion.div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Day selector for multi-day events */}
+                {isMultiDay && (
+                  <div>
+                    <label className="block text-xs font-body uppercase tracking-wider text-muted-foreground mb-3">
+                      Tag wählen <span className="text-destructive">*</span>
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {eventDays.map((day) => (
+                        <button
+                          key={day}
+                          type="button"
+                          onClick={() => {
+                            setSelectedDay(day);
+                            setSelectedZone(null);
+                          }}
+                          className={`px-4 py-2 rounded font-body text-sm transition-all
+                            ${selectedDay === day
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-card border border-border text-foreground hover:border-primary/50"
+                            }`}
+                        >
+                          {formatDayOption(day)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Seat Zone Map */}
                 <div>
                   <label className="block text-xs font-body uppercase tracking-wider text-muted-foreground mb-3">

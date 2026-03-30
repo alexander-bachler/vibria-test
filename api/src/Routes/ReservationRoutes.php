@@ -56,7 +56,8 @@ class ReservationRoutes
             }
 
             $resModel = new Reservation($db);
-            $reserved = $resModel->countByEvent((int)$data['event_id']);
+            $reservationDate = !empty($data['reservation_date']) ? $data['reservation_date'] : null;
+            $reserved = $resModel->countByEvent((int)$data['event_id'], $reservationDate);
             $available = $event['total_seats'] - $reserved;
 
             if ((int)$data['seats'] > $available) {
@@ -68,7 +69,9 @@ class ReservationRoutes
 
             // Confirmation email
             $zoneLabel = self::ZONE_LABELS[$data['seating_zone'] ?? ''] ?? ($data['seating_zone'] ?? 'Kein Bereich angegeben');
-            $dateFormatted = date('d.m.Y', strtotime($event['date']));
+            $dateFormatted = $reservationDate
+                ? date('d.m.Y', strtotime($reservationDate))
+                : date('d.m.Y', strtotime($event['date']));
             $to = $data['email'];
             $subject = 'Reservierungsbestätigung – ' . $event['title'];
             $body = "Liebe/r " . $data['name'] . ",\n\n"
@@ -88,11 +91,13 @@ class ReservationRoutes
             return $response->withStatus(201)->withHeader('Content-Type', 'application/json');
         });
 
-        // Public: get seat counts per zone for an event
+        // Public: get seat counts per zone for an event (optional ?date=YYYY-MM-DD for multi-day)
         $app->get('/api/events/{id}/zones', function (Request $request, Response $response, array $args) use ($settings) {
             $db = Database::getInstance($settings['db']);
             $resModel = new Reservation($db);
-            $zones = $resModel->countByZone((int)$args['id']);
+            $params = $request->getQueryParams();
+            $date = !empty($params['date']) ? $params['date'] : null;
+            $zones = $resModel->countByZone((int)$args['id'], $date);
 
             // Also fetch total_seats so the client can compute availability per zone
             $eventModel = new Event($db);

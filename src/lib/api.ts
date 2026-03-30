@@ -102,10 +102,12 @@ export interface Reservation {
   event_id: number;
   event_title?: string;
   event_date?: string;
+  event_end_date?: string | null;
   name: string;
   email: string;
   phone: string | null;
   seating_zone: string | null;
+  reservation_date: string | null;
   seats: number;
   status: string;
   created_at: string;

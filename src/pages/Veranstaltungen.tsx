@@ -19,10 +19,13 @@ function EventCard({
   isPast?: boolean;
   onReserve?: (event: VEvent) => void;
 }) {
-  const dateObj = new Date(event.date);
+  const dateObj = new Date(event.date + "T00:00:00");
   const day = dateObj.toLocaleDateString("de-AT", { day: "2-digit" });
   const month = dateObj.toLocaleDateString("de-AT", { month: "2-digit" });
   const year = dateObj.getFullYear();
+
+  const isMultiDay = !!event.end_date && event.end_date > event.date;
+  const endDateObj = isMultiDay ? new Date(event.end_date + "T00:00:00") : null;
 
   const hasGallery = (event.gallery_count ?? 0) > 0;
 
@@ -63,7 +66,9 @@ function EventCard({
 
             <div className="absolute bottom-0 left-0 bg-primary/90 backdrop-blur-sm px-4 py-3 md:px-5 md:py-4">
               <div className="font-heading text-primary-foreground text-2xl md:text-3xl leading-none font-bold">
-                {day}.{month}.{year}
+                {isMultiDay
+                  ? `${day}.${month}. – ${endDateObj!.toLocaleDateString("de-AT", { day: "2-digit" })}.${endDateObj!.toLocaleDateString("de-AT", { month: "2-digit" })}.${endDateObj!.getFullYear()}`
+                  : `${day}.${month}.${year}`}
               </div>
               <div className="font-heading text-primary-foreground/80 text-lg md:text-xl leading-none mt-0.5">
                 {event.time} UHR
@@ -154,10 +159,10 @@ export default function Veranstaltungen() {
 
   const today = new Date().toISOString().slice(0, 10);
   const upcoming = events
-    .filter((e) => e.date >= today)
+    .filter((e) => (e.end_date ?? e.date) >= today)
     .sort((a, b) => a.date.localeCompare(b.date));
   const past = events
-    .filter((e) => e.date < today)
+    .filter((e) => (e.end_date ?? e.date) < today)
     .sort((a, b) => b.date.localeCompare(a.date));
 
   return (

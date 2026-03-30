@@ -141,13 +141,16 @@ export default function EventDetail() {
     );
   }
 
-  const dateObj = new Date(event.date);
-  const dateStr = dateObj.toLocaleDateString("de-AT", {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
+  const dateObj = new Date(event.date + "T00:00:00");
+  const isMultiDay = !!event.end_date && event.end_date > event.date;
+  const dateStr = isMultiDay
+    ? `${dateObj.toLocaleDateString("de-AT", { weekday: "long", day: "2-digit", month: "long" })} – ${new Date(event.end_date + "T00:00:00").toLocaleDateString("de-AT", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}`
+    : dateObj.toLocaleDateString("de-AT", {
+        weekday: "long",
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      });
 
   return (
     <div>

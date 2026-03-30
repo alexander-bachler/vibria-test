@@ -13,7 +13,7 @@ class Event
     {
         $sql = 'SELECT * FROM events WHERE is_published = 1';
         if (!$includePast) {
-            $sql .= ' AND date >= CURDATE()';
+            $sql .= ' AND (COALESCE(end_date, date) >= CURDATE())';
         }
         $sql .= ' ORDER BY date ASC';
         return $this->db->query($sql)->fetchAll();

@@ -62,7 +62,12 @@ export default function AdminReservations() {
                     <div className="font-medium text-foreground text-sm">{r.event_title ?? `#${r.event_id}`}</div>
                     {r.event_date && (
                       <div className="text-xs text-muted-foreground">
-                        {new Date(r.event_date).toLocaleDateString("de-AT")}
+                        {r.reservation_date
+                          ? new Date(r.reservation_date + "T00:00:00").toLocaleDateString("de-AT")
+                          : new Date(r.event_date + "T00:00:00").toLocaleDateString("de-AT")}
+                        {r.reservation_date && r.event_end_date && (
+                          <span className="ml-1 text-primary/70">(Mehrtägig)</span>
+                        )}
                       </div>
                     )}
                   </td>
