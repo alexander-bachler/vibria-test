@@ -8,9 +8,14 @@ import { getImageUrl } from "@/lib/imageUrl";
 import type { VEvent } from "@/lib/api";
 import ReservationModal from "@/components/ReservationModal";
 
+function formatShortDate(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString("de-AT", { weekday: "short", day: "2-digit", month: "2-digit" });
+}
+
 // ─── EventCard – Flyer / Poster Style ────────────────────────────────────────
 
-function EventCard({
+export function EventCard({
   event,
   isPast,
   onReserve,
@@ -19,12 +24,16 @@ function EventCard({
   isPast?: boolean;
   onReserve?: (event: VEvent) => void;
 }) {
-  const dateObj = new Date(event.date);
+  const dateObj = new Date(event.date + "T00:00:00");
   const day = dateObj.toLocaleDateString("de-AT", { day: "2-digit" });
   const month = dateObj.toLocaleDateString("de-AT", { month: "2-digit" });
   const year = dateObj.getFullYear();
 
+  const isMultiDay = !!(event.end_date && event.end_date > event.date);
+  const endDateObj = isMultiDay ? new Date(event.end_date + "T00:00:00") : null;
+
   const hasGallery = (event.gallery_count ?? 0) > 0;
+  const available = event.total_seats - (event.reserved_seats ?? 0);
 
   const Wrapper = isPast && hasGallery ? Link : "div";
   const wrapperProps = isPast && hasGallery
@@ -63,7 +72,9 @@ function EventCard({
 
             <div className="absolute bottom-0 left-0 bg-primary/90 backdrop-blur-sm px-4 py-3 md:px-5 md:py-4">
               <div className="font-heading text-primary-foreground text-2xl md:text-3xl leading-none font-bold">
-                {day}.{month}.{year}
+                {isMultiDay && endDateObj
+                  ? `${day}.${month}. – ${endDateObj.toLocaleDateString("de-AT", { day: "2-digit" })}.${endDateObj.toLocaleDateString("de-AT", { month: "2-digit" })}.${endDateObj.getFullYear()}`
+                  : `${day}.${month}.${year}`}
               </div>
               <div className="font-heading text-primary-foreground/80 text-lg md:text-xl leading-none mt-0.5">
                 {event.time} UHR
@@ -107,6 +118,37 @@ function EventCard({
                 <span className="inline-block bg-muted text-muted-foreground font-body text-xs px-3 py-1 rounded">
                   {event.admission}
                 </span>
+                {!isPast && isMultiDay && event.reserved_by_date ? (
+                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 pt-1">
+                    {(() => {
+                      const dates: string[] = [];
+                      const cur = new Date(event.date + "T00:00:00");
+                      const last = new Date(event.end_date + "T00:00:00");
+                      while (cur <= last) {
+                        const y = cur.getFullYear();
+                        const m = String(cur.getMonth() + 1).padStart(2, "0");
+                        const dd = String(cur.getDate()).padStart(2, "0");
+                        dates.push(`${y}-${m}-${dd}`);
+                        cur.setDate(cur.getDate() + 1);
+                      }
+                      return dates.map((d) => {
+                        const reserved = event.reserved_by_date![d] ?? 0;
+                        const dayAvail = event.total_seats - reserved;
+                        return (
+                          <span key={d} className="font-body text-xs text-muted-foreground">
+                            {formatShortDate(d)}: <span className={dayAvail <= 0 ? "text-destructive font-medium" : "text-foreground font-medium"}>{dayAvail <= 0 ? "ausgebucht" : `${dayAvail} frei`}</span>
+                          </span>
+                        );
+                      });
+                    })()}
+                  </div>
+                ) : !isPast ? (
+                  <div className="pt-1">
+                    <span className={`font-body text-xs ${available <= 0 ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                      {available <= 0 ? "Ausgebucht" : `${available} von ${event.total_seats} Plätzen frei`}
+                    </span>
+                  </div>
+                ) : null}
                 {isPast ? (
                   <div>
                     <span className="text-muted-foreground font-heading text-xs uppercase tracking-wider">
@@ -154,10 +196,10 @@ export default function Veranstaltungen() {
 
   const today = new Date().toISOString().slice(0, 10);
   const upcoming = events
-    .filter((e) => e.date >= today)
+    .filter((e) => (e.end_date ?? e.date) >= today)
     .sort((a, b) => a.date.localeCompare(b.date));
   const past = events
-    .filter((e) => e.date < today)
+    .filter((e) => (e.end_date ?? e.date) < today)
     .sort((a, b) => b.date.localeCompare(a.date));
 
   return (

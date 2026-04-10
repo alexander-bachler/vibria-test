@@ -45,7 +45,7 @@ export default function AdminReservations() {
           <table className="w-full text-sm font-body min-w-[800px]">
             <thead>
               <tr className="border-b border-border bg-muted/50">
-                {["Veranstaltung", "Name", "Telefon", "E-Mail", "Bereich", "Plätze", "Status", "Eingegangen", "Aktion"].map((h) => (
+                {["Veranstaltung", "Datum", "Name", "Telefon", "E-Mail", "Bereich", "Plätze", "Status", "Eingegangen", "Aktion"].map((h) => (
                   <th
                     key={h}
                     className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground font-heading whitespace-nowrap"
@@ -60,11 +60,13 @@ export default function AdminReservations() {
                 <tr key={r.id} className="border-b border-border hover:bg-muted/30">
                   <td className="px-4 py-3">
                     <div className="font-medium text-foreground text-sm">{r.event_title ?? `#${r.event_id}`}</div>
-                    {r.event_date && (
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(r.event_date).toLocaleDateString("de-AT")}
-                      </div>
-                    )}
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground text-xs">
+                    {r.reservation_date
+                      ? new Date(r.reservation_date + "T00:00:00").toLocaleDateString("de-AT")
+                      : r.event_date
+                        ? new Date(r.event_date + "T00:00:00").toLocaleDateString("de-AT")
+                        : "–"}
                   </td>
                   <td className="px-4 py-3 text-foreground">{r.name}</td>
                   <td className="px-4 py-3 text-muted-foreground">

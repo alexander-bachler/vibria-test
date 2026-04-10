@@ -28,6 +28,9 @@ class EventRoutes
                 $event['reserved_seats'] = $resModel->countByEvent((int)$event['id']);
                 $imgCountStmt->execute([(int)$event['id']]);
                 $event['gallery_count'] = (int)$imgCountStmt->fetchColumn();
+                if (!empty($event['end_date']) && $event['end_date'] > $event['date']) {
+                    $event['reserved_by_date'] = $resModel->countByEventGroupedByDate((int)$event['id']);
+                }
             }
             $response->getBody()->write(json_encode($events));
             return $response->withHeader('Content-Type', 'application/json');

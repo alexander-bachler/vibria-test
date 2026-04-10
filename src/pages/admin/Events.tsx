@@ -164,10 +164,19 @@ export default function AdminEvents() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{new Date(evt.date).toLocaleDateString("de-AT")} · {evt.time}</td>
+                  <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                    {evt.end_date && evt.end_date > evt.date
+                      ? `${new Date(evt.date + "T00:00:00").toLocaleDateString("de-AT")} – ${new Date(evt.end_date + "T00:00:00").toLocaleDateString("de-AT")}`
+                      : new Date(evt.date + "T00:00:00").toLocaleDateString("de-AT")
+                    } · {evt.time}
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{evt.type ?? "–"}</td>
                   <td className="px-4 py-3">
-                    <span className="text-xs">{evt.reserved_seats ?? 0}/{evt.total_seats}</span>
+                    <span className="text-xs">
+                      {evt.end_date && evt.end_date > evt.date
+                        ? `${evt.reserved_seats ?? 0} gesamt`
+                        : `${evt.reserved_seats ?? 0}/${evt.total_seats}`}
+                    </span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2 justify-end">

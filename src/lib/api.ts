@@ -65,6 +65,7 @@ export interface VEvent {
   admission: string;
   total_seats: number;
   reserved_seats?: number;
+  reserved_by_date?: Record<string, number>;
   image_path: string | null;
   gallery_count?: number;
   is_published: number;
@@ -100,6 +101,7 @@ export interface GalleryImage {
 export interface Reservation {
   id: number;
   event_id: number;
+  reservation_date: string;
   event_title?: string;
   event_date?: string;
   name: string;

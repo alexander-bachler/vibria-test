@@ -11,31 +11,31 @@ import ReservationModal from "@/components/ReservationModal";
 
 const quotes = [
   {
-    text: "Ohne Theater gäbe es direkten Verkehr zwischen einem Menschen und seinem Schicksal.",
-    author: "Elias Canetti",
+    text: `Kunst wird erst dann interessant, wenn wir vor irgendetwas stehen,
+das wir nicht gleich restlos erklären können.`,
+    author: "Christoph Schlingensief",
   },
   {
-    text: "Die Musik ist die höchste aller Künste, weil sie am wenigsten Abbild der Wirklichkeit ist.",
-    author: "Richard Wagner",
+    text: `Ich war schon überall auf der Welt und habe noch nie
+eine Statue eines Kritikers gesehen.`,
+    author: "Leonard Bernstein",
   },
 ];
 
-const teasers = [
-  { to: "/veranstaltungen", label: "Veranstaltungen", desc: "Aktuelle Termine" },
-  { to: "/verein", label: "Der Verein", desc: "Über uns" },
-  { to: "/raeumlichkeiten", label: "Räumlichkeiten", desc: "Das Souterrain" },
-  { to: "/kuenstler", label: "Künstler", desc: "Alle Auftritte" },
-  { to: "/kontakt", label: "Kontakt", desc: "Schreib uns" },
-];
+function formatShortDate(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString("de-AT", { weekday: "short", day: "2-digit", month: "2-digit" });
+}
 
 function HomeEventCard({ event, onReserve }: { event: VEvent; onReserve: (e: VEvent) => void }) {
-  const dateObj = new Date(event.date);
+  const dateObj = new Date(event.date + "T00:00:00");
   const day = dateObj.toLocaleDateString("de-AT", { day: "2-digit" });
   const month = dateObj.toLocaleDateString("de-AT", { month: "2-digit" });
   const year = dateObj.getFullYear();
 
+  const isMultiDay = !!(event.end_date && event.end_date > event.date);
+  const endDateObj = isMultiDay ? new Date(event.end_date + "T00:00:00") : null;
   const available = event.total_seats - (event.reserved_seats ?? 0);
-  const soldOut = available <= 0;
 
   return (
     <motion.article
@@ -63,7 +63,9 @@ function HomeEventCard({ event, onReserve }: { event: VEvent; onReserve: (e: VEv
           )}
           <div className="absolute bottom-0 left-0 bg-primary/90 backdrop-blur-sm px-4 py-3 md:px-5 md:py-4">
             <div className="font-heading text-primary-foreground text-2xl md:text-3xl leading-none font-bold">
-              {day}.{month}.{year}
+              {isMultiDay && endDateObj
+                ? `${day}.${month}. – ${endDateObj.toLocaleDateString("de-AT", { day: "2-digit" })}.${endDateObj.toLocaleDateString("de-AT", { month: "2-digit" })}.${endDateObj.getFullYear()}`
+                : `${day}.${month}.${year}`}
             </div>
             <div className="font-heading text-primary-foreground/80 text-lg md:text-xl leading-none mt-0.5">
               {event.time} UHR
@@ -100,6 +102,37 @@ function HomeEventCard({ event, onReserve }: { event: VEvent; onReserve: (e: VEv
               <span className="inline-block bg-muted text-muted-foreground font-body text-xs px-3 py-1 rounded">
                 {event.admission}
               </span>
+              {isMultiDay && event.reserved_by_date ? (
+                <div className="flex flex-wrap gap-x-3 gap-y-0.5 pt-1">
+                  {(() => {
+                    const dates: string[] = [];
+                    const cur = new Date(event.date + "T00:00:00");
+                    const last = new Date(event.end_date + "T00:00:00");
+                    while (cur <= last) {
+                      const y = cur.getFullYear();
+                      const m = String(cur.getMonth() + 1).padStart(2, "0");
+                      const dd = String(cur.getDate()).padStart(2, "0");
+                      dates.push(`${y}-${m}-${dd}`);
+                      cur.setDate(cur.getDate() + 1);
+                    }
+                    return dates.map((d) => {
+                      const reserved = event.reserved_by_date![d] ?? 0;
+                      const dayAvail = event.total_seats - reserved;
+                      return (
+                        <span key={d} className="font-body text-xs text-muted-foreground">
+                          {formatShortDate(d)}: <span className={dayAvail <= 0 ? "text-destructive font-medium" : "text-foreground font-medium"}>{dayAvail <= 0 ? "ausgebucht" : `${dayAvail} frei`}</span>
+                        </span>
+                      );
+                    });
+                  })()}
+                </div>
+              ) : (
+                <div className="pt-1">
+                  <span className={`font-body text-xs ${available <= 0 ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                    {available <= 0 ? "Ausgebucht" : `${available} von ${event.total_seats} Plätzen frei`}
+                  </span>
+                </div>
+              )}
             </div>
             <button
               onClick={(e) => { e.stopPropagation(); onReserve(event); }}
@@ -211,6 +244,13 @@ export default function Home() {
                 Zum Programm
                 <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
               </Link>
+              <Link
+                to="/veranstaltungen/archiv"
+                className="group inline-flex items-center gap-2 border border-primary-foreground/40 text-primary-foreground font-heading text-sm uppercase tracking-wider px-7 py-3 rounded-sm hover:bg-primary-foreground/10 transition-all duration-200"
+              >
+                Veranstaltungsarchiv
+                <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
+              </Link>
             </motion.div>
 
             <motion.div
@@ -239,7 +279,7 @@ export default function Home() {
                 transition={{ delay: i * 0.15 }}
                 className="border-l-2 border-primary pl-5"
               >
-                <p className="font-body text-sm md:text-base text-foreground/80 leading-relaxed italic mb-3">
+                <p className="font-body text-sm md:text-base text-foreground/80 leading-relaxed italic mb-3 whitespace-pre-line">
                   „{q.text}“
                 </p>
                 <cite className="font-heading text-xs uppercase tracking-widest text-primary not-italic">
@@ -269,79 +309,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Navigation Grid ─────────────────────── */}
-      <section className="container mx-auto px-4 md:px-6 py-12 md:py-16">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {teasers.map(({ to, label, desc }, i) => (
-            <motion.div
-              key={to}
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.07 }}
-            >
-              <Link
-                to={to}
-                className="group block h-full bg-card border border-border rounded-sm p-5 hover:border-primary/50 hover:shadow-md transition-all duration-200 text-center"
-              >
-                <h3 className="font-heading text-sm uppercase text-foreground mb-1 group-hover:text-primary transition-colors">
-                  {label}
-                </h3>
-                <p className="font-body text-xs text-muted-foreground">
-                  {desc}
-                </p>
-                <span className="inline-block mt-3 text-primary/50 font-heading text-lg group-hover:text-primary group-hover:translate-y-[-2px] transition-all">
-                  ↗
-                </span>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── YouTube Section ──────────────────────── */}
-      <section className="bg-card border-t border-border">
-        <div className="container mx-auto px-4 md:px-6 py-12 md:py-16">
-          <h2 className="text-2xl md:text-3xl text-foreground uppercase mb-2">
-            VIBRIA auf YouTube
-          </h2>
-          <p className="text-muted-foreground font-body text-sm mb-8 max-w-xl">
-            Erleben Sie Ausschnitte unserer Veranstaltungen, Künstlerporträts und
-            Einblicke in unser Souterrain.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {[
-              { id: "-f2dO_LehcA", label: "Lange Nacht der Chöre 2024" },
-              { id: "-fTy33vihkM", label: "Meine Lippen, sie küssen so heiss" },
-              { id: "AcoblNB3zLA", label: "Wenn zur Ruh die Glocken läuten" },
-            ].map((video, i) => (
-              <div
-                key={i}
-                className="relative overflow-hidden rounded-sm bg-muted"
-                style={{ aspectRatio: "16/9" }}
-              >
-                <iframe
-                  src={`https://www.youtube.com/embed/${video.id}`}
-                  title={video.label}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="absolute inset-0 w-full h-full"
-                  loading="lazy"
-                />
-              </div>
-            ))}
-          </div>
-          <a
-            href="https://www.youtube.com/@vibria-kunst-und-kulturverein"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group inline-flex items-center gap-2 bg-primary text-primary-foreground font-heading text-sm uppercase tracking-wider px-7 py-3 rounded-sm hover:bg-accent transition-all duration-200"
-          >
-            Alle Videos ansehen
-            <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
-          </a>
-        </div>
-      </section>
+      {/* Videos temporarily disabled */}
     </div>
 
     {/* Reservation Modal */}

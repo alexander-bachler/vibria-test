@@ -9,6 +9,7 @@ use Slim\App;
 use Vibria\Middleware\AuthMiddleware;
 use Vibria\Models\ContactMessage;
 use Vibria\Services\Database;
+use Vibria\Services\EmailTemplate;
 
 class ContactRoutes
 {
@@ -38,12 +39,15 @@ class ContactRoutes
             $db = Database::getInstance($settings['db']);
             $id = (new ContactMessage($db))->create($data);
 
-            // Notify admin
             $adminEmail = $settings['admin_email'] ?? 'office@vibria.art';
-            $subject = '[VIBRIA Kontakt] ' . ($data['subject'] ?? 'Neue Nachricht');
-            $body = "Neue Kontaktanfrage von " . $data['name'] . " (" . $data['email'] . "):\n\n" . $data['message'];
-            $headers = "From: noreply@vibria.art\r\nReply-To: " . $data['email'] . "\r\n";
-            @mail($adminEmail, $subject, $body, $headers);
+            $emailTpl = new EmailTemplate($settings);
+
+            @mail(
+                $adminEmail,
+                '[VIBRIA Kontakt] ' . ($data['subject'] ?? 'Neue Nachricht'),
+                $emailTpl->contactAdminNotification($data),
+                $emailTpl->getHtmlHeaders('noreply@vibria.art', $data['email'])
+            );
 
             $response->getBody()->write(json_encode(['id' => $id, 'message' => 'Message sent']));
             return $response->withStatus(201)->withHeader('Content-Type', 'application/json');

@@ -8,6 +8,7 @@ const navLinks = [
   { to: "/verein", label: "Der Verein" },
   { to: "/raeumlichkeiten", label: "Räumlichkeiten" },
   { to: "/veranstaltungen", label: "Veranstaltungen" },
+  { to: "/veranstaltungen/archiv", label: "Archiv" },
   { to: "/kuenstler", label: "Künstler" },
   { to: "/kontakt", label: "Kontakt" },
 ];

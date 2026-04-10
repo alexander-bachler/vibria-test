@@ -34,6 +34,7 @@ export default function Footer() {
             </h3>
             <address className="not-italic text-primary-foreground/60 font-body text-xs leading-relaxed">
               Reichsapfelgasse 1/30<br />
+              (Souterrain, blaue Tür rechts vom Haustor)<br />
               1150 Wien, Österreich<br />
               <a href="mailto:office@vibria.art" className="hover:text-primary-foreground transition-colors mt-1 inline-block">
                 office@vibria.art

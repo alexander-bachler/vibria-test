@@ -34,7 +34,7 @@ const PAD = 12;       // outer padding
 const STAGE_H = 36;   // stage bar height
 const GAP = 6;        // gap between zones
 const ZONE_W = 110;   // zone rect width
-const ZONE_H = 72;    // zone rect height
+const ZONE_H = 82;    // zone rect height
 const COLS = 3;
 const ROWS = 3;
 const SVG_W = PAD * 2 + ZONE_W * COLS + GAP * (COLS - 1);
@@ -51,6 +51,8 @@ function zoneRect(index: number) {
 function getFill(zone: ZoneData | undefined, isSelected: boolean): string {
   if (!zone) return "hsl(var(--muted))";
   if (isSelected) return "hsl(var(--primary))";
+  if (zone.available <= 0) return "hsl(0 40% 25%)";
+  if (zone.available <= 1) return "hsl(30 50% 22%)";
   return "hsl(195 70% 18%)";
 }
 
@@ -60,14 +62,29 @@ function getTextFill(zone: ZoneData | undefined, isSelected: boolean): string {
   return "hsl(var(--primary-foreground))";
 }
 
+function getAvailColor(zone: ZoneData | undefined, isSelected: boolean): string {
+  if (!zone || isSelected) return "hsl(var(--primary-foreground))";
+  if (zone.available <= 0) return "hsl(0 80% 70%)";
+  if (zone.available <= 1) return "hsl(35 90% 65%)";
+  return "hsl(145 60% 65%)";
+}
+
 export default function SeatZoneMap({ zones, selectedZone, onSelect }: SeatZoneMapProps) {
   return (
     <div className="w-full">
       {/* Legend */}
-      <div className="flex items-center gap-4 mb-3 font-body text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-3 font-body text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm border-2 border-accent inline-block" />
-          Ausgewählt
+          <span className="w-3 h-3 rounded-sm inline-block" style={{ background: "hsl(145 60% 65%)" }} />
+          Frei
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-sm inline-block" style={{ background: "hsl(35 90% 65%)" }} />
+          Letzter Platz
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-sm inline-block" style={{ background: "hsl(0 80% 70%)" }} />
+          Voll
         </span>
       </div>
 
@@ -102,6 +119,7 @@ export default function SeatZoneMap({ zones, selectedZone, onSelect }: SeatZoneM
         {ZONE_GRID.map((zone, i) => {
           const { x, y } = zoneRect(i);
           const data = zones[zone.key];
+          const isFull = !!data && data.available <= 0;
           const isSelected = selectedZone === zone.key;
           const fill = getFill(data, isSelected);
           const textFill = getTextFill(data, isSelected);
@@ -109,11 +127,12 @@ export default function SeatZoneMap({ zones, selectedZone, onSelect }: SeatZoneM
           return (
             <g
               key={zone.key}
-              onClick={() => onSelect(zone.key)}
-              style={{ cursor: "pointer" }}
+              onClick={() => !isFull && onSelect(zone.key)}
+              style={{ cursor: isFull ? "not-allowed" : "pointer", opacity: isFull ? 0.6 : 1 }}
               role="button"
               aria-label={`${zone.row} ${zone.col}`}
               aria-pressed={isSelected}
+              aria-disabled={isFull}
             >
               <rect
                 x={x}
@@ -143,7 +162,7 @@ export default function SeatZoneMap({ zones, selectedZone, onSelect }: SeatZoneM
               {/* Col label (large) */}
               <text
                 x={x + ZONE_W / 2}
-                y={y + 40}
+                y={y + 38}
                 textAnchor="middle"
                 fontSize={13}
                 fontFamily="var(--font-heading, sans-serif)"
@@ -152,28 +171,35 @@ export default function SeatZoneMap({ zones, selectedZone, onSelect }: SeatZoneM
               >
                 {zone.col}
               </text>
+
+              {/* Available seats */}
+              <text
+                x={x + ZONE_W / 2}
+                y={y + 60}
+                textAnchor="middle"
+                fontSize={13}
+                fontWeight="bold"
+                fontFamily="var(--font-heading, sans-serif)"
+                fill={getAvailColor(data, isSelected)}
+              >
+                {data
+                  ? data.available <= 0
+                    ? "VOLL"
+                    : `${data.available}/${data.capacity} frei`
+                  : ""}
+              </text>
+              {data && data.available <= 0 && !isSelected && (
+                <line
+                  x1={x + 8} y1={y + 8}
+                  x2={x + ZONE_W - 8} y2={y + ZONE_H - 8}
+                  stroke="hsl(0 60% 50% / 0.3)"
+                  strokeWidth={1.5}
+                />
+              )}
             </g>
           );
         })}
 
-        {/* Row labels on the left */}
-        {["Vorne", "Mitte", "Hinten"].map((label, i) => {
-          const { y } = zoneRect(i * 3);
-          return (
-            <text
-              key={label}
-              x={PAD - 4}
-              y={y + ZONE_H / 2 + 4}
-              textAnchor="end"
-              fontSize={8}
-              fontFamily="var(--font-body, sans-serif)"
-              fill="hsl(var(--muted-foreground))"
-              letterSpacing={1}
-            >
-              {label.toUpperCase()}
-            </text>
-          );
-        })}
       </svg>
     </div>
   );

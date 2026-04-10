@@ -12,6 +12,7 @@ import Home from "@/pages/Home";
 import Verein from "@/pages/Verein";
 import Raeumlichkeiten from "@/pages/Raeumlichkeiten";
 import Veranstaltungen from "@/pages/Veranstaltungen";
+import Veranstaltungsarchiv from "@/pages/Veranstaltungsarchiv";
 import EventDetail from "@/pages/EventDetail";
 import Kuenstler from "@/pages/Kuenstler";
 import Kontakt from "@/pages/Kontakt";
@@ -49,6 +50,7 @@ export default function App() {
               <Route path="/verein" element={<Verein />} />
               <Route path="/raeumlichkeiten" element={<Raeumlichkeiten />} />
               <Route path="/veranstaltungen" element={<Veranstaltungen />} />
+              <Route path="/veranstaltungen/archiv" element={<Veranstaltungsarchiv />} />
               <Route path="/veranstaltungen/:id" element={<EventDetail />} />
               <Route path="/kuenstler" element={<Kuenstler />} />
               <Route path="/kontakt" element={<Kontakt />} />

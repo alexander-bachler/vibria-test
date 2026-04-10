@@ -181,7 +181,7 @@ export default function Verein() {
                   <h3 className="font-heading text-base uppercase text-foreground leading-tight mb-2">
                     {member.name}
                   </h3>
-                  <p className="font-body text-xs text-muted-foreground leading-relaxed line-clamp-6">
+                  <p className="font-body text-xs text-muted-foreground leading-relaxed">
                     {member.bio}
                   </p>
                 </div>
