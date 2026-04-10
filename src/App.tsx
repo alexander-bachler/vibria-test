@@ -26,6 +26,9 @@ import AdminBoard from "@/pages/admin/Board";
 import AdminGallery from "@/pages/admin/Gallery";
 import AdminReservations from "@/pages/admin/Reservations";
 import AdminMessages from "@/pages/admin/Messages";
+import EventGuestList from "@/pages/admin/EventGuestList";
+import ScanCheckIn from "@/pages/admin/ScanCheckIn";
+import CheckInByToken from "@/pages/admin/CheckInByToken";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -64,10 +67,13 @@ export default function App() {
               <Route element={<AdminLayout />}>
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/events" element={<AdminEvents />} />
+                <Route path="/admin/events/:id/guests" element={<EventGuestList />} />
                 <Route path="/admin/artists" element={<AdminArtists />} />
                 <Route path="/admin/board" element={<AdminBoard />} />
                 <Route path="/admin/gallery" element={<AdminGallery />} />
                 <Route path="/admin/reservations" element={<AdminReservations />} />
+                <Route path="/admin/scan" element={<ScanCheckIn />} />
+                <Route path="/admin/checkin/:token" element={<CheckInByToken />} />
                 <Route path="/admin/messages" element={<AdminMessages />} />
               </Route>
             </Route>

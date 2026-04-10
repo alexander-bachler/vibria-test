@@ -12,6 +12,11 @@ class ComposerStaticInitfde6372c011449e3f49bd3fbcc2c7f73
     );
 
     public static $prefixLengthsPsr4 = array (
+        'c' =>
+        array (
+            'chillerlan\\Settings\\' => 20,
+            'chillerlan\\QRCode\\' => 18,
+        ),
         'V' =>
         array (
             'Vibria\\' => 7,
@@ -27,6 +32,7 @@ class ComposerStaticInitfde6372c011449e3f49bd3fbcc2c7f73
             'Psr\\Http\\Server\\' => 16,
             'Psr\\Http\\Message\\' => 17,
             'Psr\\Container\\' => 14,
+            'PHPMailer\\PHPMailer\\' => 20,
         ),
         'I' =>
         array (
@@ -42,6 +48,14 @@ class ComposerStaticInitfde6372c011449e3f49bd3fbcc2c7f73
     );
 
     public static $prefixDirsPsr4 = array (
+        'chillerlan\\Settings\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/chillerlan/php-settings-container/src',
+        ),
+        'chillerlan\\QRCode\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/chillerlan/php-qrcode/src',
+        ),
         'Vibria\\' =>
         array (
             0 => __DIR__ . '/../..' . '/src',
@@ -71,6 +85,10 @@ class ComposerStaticInitfde6372c011449e3f49bd3fbcc2c7f73
         'Psr\\Container\\' =>
         array (
             0 => __DIR__ . '/..' . '/psr/container/src',
+        ),
+        'PHPMailer\\PHPMailer\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/phpmailer/phpmailer/src',
         ),
         'Intervention\\Image\\' =>
         array (

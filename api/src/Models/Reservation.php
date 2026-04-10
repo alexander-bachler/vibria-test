@@ -59,11 +59,13 @@ class Reservation
         return $result;
     }
 
-    public function create(array $data): int
+    /** @return array{id: int, checkin_token: string} */
+    public function create(array $data): array
     {
+        $token = bin2hex(random_bytes(32));
         $stmt = $this->db->prepare(
-            'INSERT INTO reservations (event_id, reservation_date, name, email, phone, seating_zone, seats, status)
-             VALUES (:event_id, :reservation_date, :name, :email, :phone, :seating_zone, :seats, :status)'
+            'INSERT INTO reservations (event_id, reservation_date, name, email, phone, seating_zone, seats, status, checkin_token)
+             VALUES (:event_id, :reservation_date, :name, :email, :phone, :seating_zone, :seats, :status, :checkin_token)'
         );
         $phone = isset($data['phone']) ? trim((string)$data['phone']) : '';
         $stmt->execute([
@@ -75,8 +77,26 @@ class Reservation
             'seating_zone'     => $data['seating_zone'] ?? null,
             'seats'            => $data['seats'] ?? 1,
             'status'           => 'pending',
+            'checkin_token'    => $token,
         ]);
-        return (int)$this->db->lastInsertId();
+        return [
+            'id'             => (int)$this->db->lastInsertId(),
+            'checkin_token'  => $token,
+        ];
+    }
+
+    public function findByToken(string $token): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT r.*, e.title AS event_title, e.date AS event_date, e.end_date AS event_end_date, e.time AS event_time
+             FROM reservations r
+             JOIN events e ON r.event_id = e.id
+             WHERE r.checkin_token = ?
+             LIMIT 1'
+        );
+        $stmt->execute([$token]);
+        $row = $stmt->fetch();
+        return $row ?: null;
     }
 
     /** Returns seat count grouped by seating_zone for a given event and date. */
@@ -101,5 +121,21 @@ class Reservation
     {
         $stmt = $this->db->prepare('UPDATE reservations SET status = ? WHERE id = ?');
         return $stmt->execute([$status, $id]);
+    }
+
+    public function toggleCheckIn(int $id): ?string
+    {
+        $stmt = $this->db->prepare('SELECT checked_in_at FROM reservations WHERE id = ?');
+        $stmt->execute([$id]);
+        $current = $stmt->fetchColumn();
+
+        if ($current) {
+            $this->db->prepare('UPDATE reservations SET checked_in_at = NULL WHERE id = ?')->execute([$id]);
+            return null;
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $this->db->prepare('UPDATE reservations SET checked_in_at = ? WHERE id = ?')->execute([$now, $id]);
+        return $now;
     }
 }

@@ -25,6 +25,7 @@ const ZONE_LABELS: Record<ZoneKey, string> = {
   "hinten-links":  "Hinten Links",
   "hinten-mitte":  "Hinten Mitte",
   "hinten-rechts": "Hinten Rechts",
+  "rest-plaetze":  "Restplätze (Zusatz)",
 };
 
 function getEventDates(start: string, end: string | null): string[] {

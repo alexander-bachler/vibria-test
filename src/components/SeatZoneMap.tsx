@@ -9,7 +9,8 @@ export interface ZoneData {
 export type ZoneKey =
   | "vorne-links"  | "vorne-mitte"  | "vorne-rechts"
   | "mitte-links"  | "mitte-mitte"  | "mitte-rechts"
-  | "hinten-links" | "hinten-mitte" | "hinten-rechts";
+  | "hinten-links" | "hinten-mitte" | "hinten-rechts"
+  | "rest-plaetze";
 
 interface SeatZoneMapProps {
   zones: Record<string, ZoneData>;
@@ -37,8 +38,12 @@ const ZONE_W = 110;   // zone rect width
 const ZONE_H = 82;    // zone rect height
 const COLS = 3;
 const ROWS = 3;
+const REST_ZONE_KEY: ZoneKey = "rest-plaetze";
+const REST_H = 70;
 const SVG_W = PAD * 2 + ZONE_W * COLS + GAP * (COLS - 1);
-const SVG_H = PAD + STAGE_H + GAP * 2 + (ZONE_H + GAP) * ROWS + PAD;
+const GRID_BOTTOM_Y = PAD + STAGE_H + GAP * 2 + (ROWS - 1) * (ZONE_H + GAP) + ZONE_H;
+const REST_Y = GRID_BOTTOM_Y + GAP;
+const SVG_H = REST_Y + REST_H + PAD;
 
 function zoneRect(index: number) {
   const col = index % COLS;
@@ -67,6 +72,82 @@ function getAvailColor(zone: ZoneData | undefined, isSelected: boolean): string 
   if (zone.available <= 0) return "hsl(0 80% 70%)";
   if (zone.available <= 1) return "hsl(35 90% 65%)";
   return "hsl(145 60% 65%)";
+}
+
+function RestPlaetzeZone({
+  zones,
+  selectedZone,
+  onSelect,
+}: Pick<SeatZoneMapProps, "zones" | "selectedZone" | "onSelect">) {
+  const zone = REST_ZONE_KEY;
+  const data = zones[zone];
+  const x = PAD;
+  const y = REST_Y;
+  const w = SVG_W - PAD * 2;
+  const isFull = !!data && data.available <= 0;
+  const isSelected = selectedZone === zone;
+  const fill = getFill(data, isSelected);
+  const textFill = getTextFill(data, isSelected);
+
+  return (
+    <g
+      key={zone}
+      onClick={() => !isFull && onSelect(zone)}
+      style={{ cursor: isFull ? "not-allowed" : "pointer", opacity: isFull ? 0.6 : 1 }}
+      role="button"
+      aria-label="Restplätze Zusatz vier Plätze"
+      aria-pressed={isSelected}
+      aria-disabled={isFull}
+    >
+      <rect
+        x={x}
+        y={y}
+        width={w}
+        height={REST_H}
+        rx={5}
+        fill={fill}
+        stroke={isSelected ? "hsl(var(--accent))" : "transparent"}
+        strokeWidth={isSelected ? 2.5 : 0}
+      />
+      <text
+        x={x + w / 2}
+        y={y + 26}
+        textAnchor="middle"
+        fontSize={12}
+        fontFamily="var(--font-heading, sans-serif)"
+        fontWeight="bold"
+        fill={textFill}
+        letterSpacing={2}
+      >
+        RESTPLÄTZE (ZUSATZ)
+      </text>
+      <text
+        x={x + w / 2}
+        y={y + 48}
+        textAnchor="middle"
+        fontSize={13}
+        fontWeight="bold"
+        fontFamily="var(--font-heading, sans-serif)"
+        fill={getAvailColor(data, isSelected)}
+      >
+        {data
+          ? data.available <= 0
+            ? "VOLL"
+            : `${data.available}/${data.capacity} frei`
+          : ""}
+      </text>
+      {data && data.available <= 0 && !isSelected && (
+        <line
+          x1={x + 10}
+          y1={y + 10}
+          x2={x + w - 10}
+          y2={y + REST_H - 10}
+          stroke="hsl(0 60% 50% / 0.3)"
+          strokeWidth={1.5}
+        />
+      )}
+    </g>
+  );
 }
 
 export default function SeatZoneMap({ zones, selectedZone, onSelect }: SeatZoneMapProps) {
@@ -199,6 +280,8 @@ export default function SeatZoneMap({ zones, selectedZone, onSelect }: SeatZoneM
             </g>
           );
         })}
+
+        <RestPlaetzeZone zones={zones} selectedZone={selectedZone} onSelect={onSelect} />
 
       </svg>
     </div>

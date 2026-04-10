@@ -3,8 +3,15 @@ declare(strict_types=1);
 
 namespace Vibria\Services;
 
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
+use chillerlan\QRCode\Output\QROutputInterface;
+
 class EmailTemplate
 {
+    /** Content-ID for inline QR image (must match Mailer embedded attachment). Gmail blocks data: URLs. */
+    public const CHECKIN_QR_CID = 'vibria-checkin-qr';
+
     private const PRIMARY = '#002633';
     private const ACCENT = '#00394d';
     private const RING = '#006080';
@@ -123,7 +130,23 @@ class EmailTemplate
 HTML;
     }
 
-    public function reservationConfirmation(array $event, array $data, string $zoneLabel, string $dateFormatted): string
+    /** Raw PNG bytes for PHPMailer embedded image (not data: URI — Gmail strips those). */
+    public function checkinQrPngBytes(string $checkinUrl): string
+    {
+        $options = new QROptions([
+            'outputType'         => QROutputInterface::GDIMAGE_PNG,
+            'scale'              => 8,
+            'outputBase64'       => false,
+            'bgColor'            => [255, 255, 255],
+            'imageTransparent'   => false,
+            'drawLightModules'   => true,
+            'quietzoneSize'      => 2,
+        ]);
+
+        return (new QRCode($options))->render($checkinUrl);
+    }
+
+    public function reservationConfirmation(array $event, array $data, string $zoneLabel, string $dateFormatted, string $checkinToken = ''): string
     {
         $c = $this->colors();
         $name = htmlspecialchars($data['name']);
@@ -131,6 +154,26 @@ HTML;
         $time = htmlspecialchars($event['time']);
         $seats = (int)$data['seats'];
         $seatWord = $seats === 1 ? 'Platz' : 'Plätze';
+
+        $qrHtml = '';
+        if ($checkinToken !== '') {
+            $cid = self::CHECKIN_QR_CID;
+
+            $qrHtml = <<<HTML
+
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 24px;">
+  <tr>
+    <td style="border-top:1px solid {$c['border']};padding-top:24px;text-align:center;">
+      <p style="margin:0 0 12px;font-family:{$c['fontHeading']};font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:{$c['primary']};">Ihr Check-in QR-Code</p>
+      <img src="cid:{$cid}" alt="QR-Code" width="180" height="180" style="display:inline-block;width:180px;height:180px;border:1px solid {$c['border']};border-radius:4px;" />
+      <p style="margin:12px 0 0;font-family:{$c['fontStack']};font-size:12px;line-height:1.5;color:{$c['muted']};">
+        Zeigen Sie diesen QR-Code am Einlass vor,<br>um schnell eingecheckt zu werden.
+      </p>
+    </td>
+  </tr>
+</table>
+HTML;
+        }
 
         $content = <<<HTML
 <p style="margin:0 0 20px;font-family:{$c['fontStack']};font-size:14px;line-height:1.7;color:{$c['text']};">
@@ -186,7 +229,7 @@ HTML;
     </td>
   </tr>
 </table>
-
+{$qrHtml}
 <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 24px;border-left:3px solid {$c['ring']};background-color:#f0f7fa;border-radius:0 4px 4px 0;">
   <tr>
     <td style="padding:14px 20px;">

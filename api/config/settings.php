@@ -21,6 +21,15 @@ $defaults = [
     'max_upload_size' => 10 * 1024 * 1024, // 10 MB
     'admin_email' => 'office@vibria.art',
     'site_name' => 'VIBRIA | Kunst- und Kulturverein',
+    'smtp' => [
+        'host'       => 'smtp.world4you.com',
+        'port'       => 587,
+        'encryption' => 'tls',
+        'username'   => 'noreply@vibria.art',
+        'password'   => 'H%CiysxVq$J_eJ%nu3xtdUQgft=VXQ+%',
+        'from_email' => 'noreply@vibria.art',
+        'from_name'  => 'VIBRIA',
+    ],
 ];
 
 return array_replace_recursive($defaults, $localSettings);

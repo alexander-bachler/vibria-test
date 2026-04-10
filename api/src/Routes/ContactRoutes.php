@@ -10,6 +10,7 @@ use Vibria\Middleware\AuthMiddleware;
 use Vibria\Models\ContactMessage;
 use Vibria\Services\Database;
 use Vibria\Services\EmailTemplate;
+use Vibria\Services\Mailer;
 
 class ContactRoutes
 {
@@ -41,12 +42,13 @@ class ContactRoutes
 
             $adminEmail = $settings['admin_email'] ?? 'office@vibria.art';
             $emailTpl = new EmailTemplate($settings);
+            $mailer = new Mailer($settings['smtp'] ?? []);
 
-            @mail(
+            $mailer->send(
                 $adminEmail,
                 '[VIBRIA Kontakt] ' . ($data['subject'] ?? 'Neue Nachricht'),
                 $emailTpl->contactAdminNotification($data),
-                $emailTpl->getHtmlHeaders('noreply@vibria.art', $data['email'])
+                $data['email']
             );
 
             $response->getBody()->write(json_encode(['id' => $id, 'message' => 'Message sent']));

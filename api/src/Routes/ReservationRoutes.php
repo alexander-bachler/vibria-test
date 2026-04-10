@@ -11,6 +11,7 @@ use Vibria\Models\Reservation;
 use Vibria\Models\Event;
 use Vibria\Services\Database;
 use Vibria\Services\EmailTemplate;
+use Vibria\Services\Mailer;
 
 class ReservationRoutes
 {
@@ -27,6 +28,7 @@ class ReservationRoutes
         'hinten-links'  => 'Hinten Links',
         'hinten-mitte'  => 'Hinten Mitte',
         'hinten-rechts' => 'Hinten Rechts',
+        'rest-plaetze'  => 'Restplätze (Zusatz)',
     ];
 
     public static function register(App $app, array $settings): void
@@ -98,26 +100,41 @@ class ReservationRoutes
                 }
             }
 
-            $id = $resModel->create($data);
+            $result = $resModel->create($data);
+            $id = $result['id'];
+            $checkinToken = $result['checkin_token'];
 
             $zoneLabel = self::ZONE_LABELS[$data['seating_zone'] ?? ''] ?? ($data['seating_zone'] ?? 'Kein Bereich angegeben');
             $dateFormatted = date('d.m.Y', strtotime($reservationDate));
             $emailTpl = new EmailTemplate($settings);
+            $mailer = new Mailer($settings['smtp'] ?? []);
 
             $adminEmail = $settings['admin_email'] ?? 'office@vibria.art';
 
-            @mail(
+            $guestEmbedded = [];
+            if ($checkinToken !== '') {
+                $checkinUrl = rtrim($settings['site_url'] ?? 'https://vibria.art', '/') . '/admin/checkin/' . $checkinToken;
+                $guestEmbedded[] = [
+                    'cid'      => EmailTemplate::CHECKIN_QR_CID,
+                    'data'     => $emailTpl->checkinQrPngBytes($checkinUrl),
+                    'filename' => 'checkin-qr.png',
+                    'mime'     => 'image/png',
+                ];
+            }
+
+            $mailer->send(
                 $data['email'],
                 'Reservierungsbestätigung – ' . $event['title'],
-                $emailTpl->reservationConfirmation($event, $data, $zoneLabel, $dateFormatted),
-                $emailTpl->getHtmlHeaders($adminEmail, 'office@vibria.art')
+                $emailTpl->reservationConfirmation($event, $data, $zoneLabel, $dateFormatted, $checkinToken),
+                'office@vibria.art',
+                $guestEmbedded
             );
 
-            @mail(
+            $mailer->send(
                 $adminEmail,
                 '[VIBRIA] Neue Reservierung – ' . $event['title'],
                 $emailTpl->reservationAdminNotification($event, $data, $zoneLabel, $dateFormatted),
-                $emailTpl->getHtmlHeaders('noreply@vibria.art', $data['email'])
+                $data['email']
             );
 
             $response->getBody()->write(json_encode(['id' => $id, 'message' => 'Reservation created']));
@@ -171,12 +188,50 @@ class ReservationRoutes
             return $response->withHeader('Content-Type', 'application/json');
         })->add($auth);
 
+        // Admin: toggle check-in
+        $app->patch('/api/admin/reservations/{id}/checkin', function (Request $request, Response $response, array $args) use ($settings) {
+            $db = Database::getInstance($settings['db']);
+            $model = new Reservation($db);
+            $checkedInAt = $model->toggleCheckIn((int)$args['id']);
+            $response->getBody()->write(json_encode(['checked_in_at' => $checkedInAt]));
+            return $response->withHeader('Content-Type', 'application/json');
+        })->add($auth);
+
         // Admin: update status
         $app->patch('/api/admin/reservations/{id}', function (Request $request, Response $response, array $args) use ($settings) {
             $data = (array)$request->getParsedBody();
             $db = Database::getInstance($settings['db']);
             (new Reservation($db))->updateStatus((int)$args['id'], $data['status'] ?? 'pending');
             $response->getBody()->write(json_encode(['message' => 'Updated']));
+            return $response->withHeader('Content-Type', 'application/json');
+        })->add($auth);
+
+        // Admin: get reservation by check-in token
+        $app->get('/api/admin/reservations/token/{token}', function (Request $request, Response $response, array $args) use ($settings) {
+            $db = Database::getInstance($settings['db']);
+            $model = new Reservation($db);
+            $reservation = $model->findByToken($args['token']);
+            if (!$reservation) {
+                $response->getBody()->write(json_encode(['error' => 'Reservation not found']));
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
+            }
+            $reservation['zone_label'] = self::ZONE_LABELS[$reservation['seating_zone'] ?? '']
+                ?? ($reservation['seating_zone'] ?? null);
+            $response->getBody()->write(json_encode($reservation));
+            return $response->withHeader('Content-Type', 'application/json');
+        })->add($auth);
+
+        // Admin: check-in by token
+        $app->patch('/api/admin/reservations/token/{token}/checkin', function (Request $request, Response $response, array $args) use ($settings) {
+            $db = Database::getInstance($settings['db']);
+            $model = new Reservation($db);
+            $reservation = $model->findByToken($args['token']);
+            if (!$reservation) {
+                $response->getBody()->write(json_encode(['error' => 'Reservation not found']));
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
+            }
+            $checkedInAt = $model->toggleCheckIn((int)$reservation['id']);
+            $response->getBody()->write(json_encode(['checked_in_at' => $checkedInAt]));
             return $response->withHeader('Content-Type', 'application/json');
         })->add($auth);
     }

@@ -18,6 +18,7 @@ const ZONE_LABELS: Record<string, string> = {
   "hinten-links":  "Hinten Links",
   "hinten-mitte":  "Hinten Mitte",
   "hinten-rechts": "Hinten Rechts",
+  "rest-plaetze":  "Restplätze (Zusatz)",
 };
 
 export default function AdminReservations() {

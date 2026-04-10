@@ -110,6 +110,8 @@ export interface Reservation {
   seating_zone: string | null;
   seats: number;
   status: string;
+  checked_in_at: string | null;
+  checkin_token: string;
   created_at: string;
 }
 

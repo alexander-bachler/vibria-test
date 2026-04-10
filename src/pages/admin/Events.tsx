@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, X, Eye, EyeOff } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Eye, EyeOff, ClipboardList } from "lucide-react";
 import { api } from "@/lib/api";
 import { getImageUrl } from "@/lib/imageUrl";
 import ImageUpload from "@/components/ImageUpload";
@@ -98,6 +99,7 @@ function EventModal({ event, onClose, onSave }: {
 
 export default function AdminEvents() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [editing, setEditing] = useState<Partial<VEvent> | null>(null);
   const [showModal, setShowModal] = useState(false);
 
@@ -154,7 +156,7 @@ export default function AdminEvents() {
             </thead>
             <tbody>
               {events.map((evt) => (
-                <tr key={evt.id} className="border-b border-border hover:bg-muted/30 transition-colors">
+                <tr key={evt.id} className="border-b border-border hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/admin/events/${evt.id}/guests`)}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       {evt.is_published ? <Eye size={12} className="text-primary flex-shrink-0" /> : <EyeOff size={12} className="text-muted-foreground flex-shrink-0" />}
@@ -179,9 +181,10 @@ export default function AdminEvents() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-2 justify-end">
-                      <button onClick={() => { setEditing(evt); setShowModal(true); }} className="p-1 hover:text-primary transition-colors"><Pencil size={14} /></button>
-                      <button onClick={() => { if (confirm("Löschen?")) deleteMut.mutate(evt.id); }} className="p-1 hover:text-destructive transition-colors"><Trash2 size={14} /></button>
+                    <div className="flex items-center gap-2 justify-end" onClick={(e) => e.stopPropagation()}>
+                      <button onClick={() => navigate(`/admin/events/${evt.id}/guests`)} className="p-1 hover:text-primary transition-colors" title="Gästeliste"><ClipboardList size={14} /></button>
+                      <button onClick={() => { setEditing(evt); setShowModal(true); }} className="p-1 hover:text-primary transition-colors" title="Bearbeiten"><Pencil size={14} /></button>
+                      <button onClick={() => { if (confirm("Löschen?")) deleteMut.mutate(evt.id); }} className="p-1 hover:text-destructive transition-colors" title="Löschen"><Trash2 size={14} /></button>
                     </div>
                   </td>
                 </tr>

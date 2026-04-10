@@ -2,7 +2,7 @@ import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   Calendar, Users, Layout, Image, BookOpen, MessageSquare,
-  LogOut, Menu, X, BarChart2
+  LogOut, Menu, X, BarChart2, QrCode,
 } from "lucide-react";
 import vibriaLogo from "@/assets/vibria-logo.svg";
 
@@ -13,6 +13,7 @@ const adminNav = [
   { to: "/admin/board", label: "Vorstand", icon: Layout },
   { to: "/admin/gallery", label: "Galerie", icon: Image },
   { to: "/admin/reservations", label: "Reservierungen", icon: BookOpen },
+  { to: "/admin/scan", label: "QR Scanner", icon: QrCode },
   { to: "/admin/messages", label: "Nachrichten", icon: MessageSquare },
 ];
 
