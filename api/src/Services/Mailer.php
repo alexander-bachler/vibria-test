@@ -3,8 +3,9 @@ declare(strict_types=1);
 
 namespace Vibria\Services;
 
+use PDO;
 use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
+use Vibria\Models\EmailLog;
 
 class Mailer
 {
@@ -16,27 +17,38 @@ class Mailer
     }
 
     /**
+     * Optional audit log (email_logs). When set, every attempt is persisted with HTML body.
+     *
      * @param list<array{cid: string, data: string, filename?: string, mime?: string}> $embeddedImages
-     *        Inline images for HTML (CID). Required for clients like Gmail that block data: URIs in img src.
+     * @param array{pdo: PDO, type: string, related_id?: int|null}|null $logContext
      */
-    public function send(string $to, string $subject, string $htmlBody, string $replyTo = '', array $embeddedImages = []): bool
-    {
+    public function send(
+        string $to,
+        string $subject,
+        string $htmlBody,
+        string $replyTo = '',
+        array $embeddedImages = [],
+        ?array $logContext = null
+    ): bool {
+        $success = false;
+        $lastError = null;
         $tempFiles = [];
         try {
             if (!class_exists(PHPMailer::class)) {
-                error_log('[VIBRIA Mailer] PHPMailer not installed — run composer update');
+                $lastError = 'PHPMailer not installed — run composer update';
+                error_log('[VIBRIA Mailer] ' . $lastError);
                 return false;
             }
 
             $mail = new PHPMailer(true);
 
             $mail->isSMTP();
-            $mail->Host       = $this->config['host'];
+            $mail->Host       = $this->config['host'] ?? '';
             $mail->SMTPAuth   = true;
-            $mail->Username   = $this->config['username'];
-            $mail->Password   = $this->config['password'];
+            $mail->Username   = $this->config['username'] ?? '';
+            $mail->Password   = $this->config['password'] ?? '';
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = (int) $this->config['port'];
+            $mail->Port       = (int)($this->config['port'] ?? 587);
             $mail->CharSet    = 'UTF-8';
 
             $mail->setFrom(
@@ -71,11 +83,28 @@ class Mailer
             $mail->AltBody = strip_tags(str_replace(['<br>', '<br/>', '<br />'], "\n", $htmlBody));
 
             $mail->send();
+            $success = true;
             return true;
         } catch (\Throwable $e) {
-            error_log('[VIBRIA Mailer] Failed to send to ' . $to . ': ' . $e->getMessage());
+            $lastError = $e->getMessage();
+            error_log('[VIBRIA Mailer] Failed to send to ' . $to . ': ' . $lastError);
             return false;
         } finally {
+            if ($logContext !== null && isset($logContext['pdo'], $logContext['type'])) {
+                try {
+                    (new EmailLog($logContext['pdo']))->create([
+                        'recipient'     => $to,
+                        'subject'       => $subject,
+                        'type'          => $logContext['type'],
+                        'status'        => $success ? 'sent' : 'failed',
+                        'error_message' => $success ? null : $lastError,
+                        'html_body'     => $htmlBody,
+                        'related_id'    => $logContext['related_id'] ?? null,
+                    ]);
+                } catch (\Throwable $e) {
+                    error_log('[VIBRIA Mailer] Email log insert failed: ' . $e->getMessage());
+                }
+            }
             foreach ($tempFiles as $f) {
                 @unlink($f);
             }

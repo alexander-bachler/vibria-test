@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import {
   Camera, ArrowLeft, UserCheck, UserX, RotateCcw, QrCode,
-  CalendarDays, MapPin, Users, Clock, AlertTriangle,
+  CalendarDays, MapPin, Users, Clock, AlertTriangle, CalendarPlus,
 } from "lucide-react";
 import { Html5Qrcode } from "html5-qrcode";
 import { api } from "@/lib/api";
@@ -335,6 +335,15 @@ export function ReservationDetail({
             </div>
             <p className="text-sm font-medium text-foreground">
               {zoneLabel ?? "–"}
+            </p>
+          </div>
+          <div className="bg-card px-5 py-3 col-span-2">
+            <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
+              <CalendarPlus size={12} />
+              <span className="text-xs uppercase tracking-wider font-heading">Reserviert am</span>
+            </div>
+            <p className="text-sm font-medium text-foreground">
+              {new Date(reservation.created_at).toLocaleDateString("de-AT", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
             </p>
           </div>
         </div>

@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Layout from "@/components/layout/Layout";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
@@ -24,8 +24,7 @@ import AdminEvents from "@/pages/admin/Events";
 import AdminArtists from "@/pages/admin/Artists";
 import AdminBoard from "@/pages/admin/Board";
 import AdminGallery from "@/pages/admin/Gallery";
-import AdminReservations from "@/pages/admin/Reservations";
-import AdminMessages from "@/pages/admin/Messages";
+import AdminCommunication from "@/pages/admin/Communication";
 import EventGuestList from "@/pages/admin/EventGuestList";
 import ScanCheckIn from "@/pages/admin/ScanCheckIn";
 import CheckInByToken from "@/pages/admin/CheckInByToken";
@@ -71,10 +70,10 @@ export default function App() {
                 <Route path="/admin/artists" element={<AdminArtists />} />
                 <Route path="/admin/board" element={<AdminBoard />} />
                 <Route path="/admin/gallery" element={<AdminGallery />} />
-                <Route path="/admin/reservations" element={<AdminReservations />} />
                 <Route path="/admin/scan" element={<ScanCheckIn />} />
                 <Route path="/admin/checkin/:token" element={<CheckInByToken />} />
-                <Route path="/admin/messages" element={<AdminMessages />} />
+                <Route path="/admin/communication" element={<AdminCommunication />} />
+                <Route path="/admin/messages" element={<Navigate to="/admin/communication" replace />} />
               </Route>
             </Route>
 

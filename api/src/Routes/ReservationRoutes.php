@@ -9,6 +9,7 @@ use Slim\App;
 use Vibria\Middleware\AuthMiddleware;
 use Vibria\Models\Reservation;
 use Vibria\Models\Event;
+use Vibria\Models\EmailLog;
 use Vibria\Services\Database;
 use Vibria\Services\EmailTemplate;
 use Vibria\Services\Mailer;
@@ -104,38 +105,7 @@ class ReservationRoutes
             $id = $result['id'];
             $checkinToken = $result['checkin_token'];
 
-            $zoneLabel = self::ZONE_LABELS[$data['seating_zone'] ?? ''] ?? ($data['seating_zone'] ?? 'Kein Bereich angegeben');
-            $dateFormatted = date('d.m.Y', strtotime($reservationDate));
-            $emailTpl = new EmailTemplate($settings);
-            $mailer = new Mailer($settings['smtp'] ?? []);
-
-            $adminEmail = $settings['admin_email'] ?? 'office@vibria.art';
-
-            $guestEmbedded = [];
-            if ($checkinToken !== '') {
-                $checkinUrl = rtrim($settings['site_url'] ?? 'https://vibria.art', '/') . '/admin/checkin/' . $checkinToken;
-                $guestEmbedded[] = [
-                    'cid'      => EmailTemplate::CHECKIN_QR_CID,
-                    'data'     => $emailTpl->checkinQrPngBytes($checkinUrl),
-                    'filename' => 'checkin-qr.png',
-                    'mime'     => 'image/png',
-                ];
-            }
-
-            $mailer->send(
-                $data['email'],
-                'Reservierungsbestätigung – ' . $event['title'],
-                $emailTpl->reservationConfirmation($event, $data, $zoneLabel, $dateFormatted, $checkinToken),
-                'office@vibria.art',
-                $guestEmbedded
-            );
-
-            $mailer->send(
-                $adminEmail,
-                '[VIBRIA] Neue Reservierung – ' . $event['title'],
-                $emailTpl->reservationAdminNotification($event, $data, $zoneLabel, $dateFormatted),
-                $data['email']
-            );
+            self::sendReservationEmails($settings, $db, $event, $data, $reservationDate, $id, $checkinToken, true);
 
             $response->getBody()->write(json_encode(['id' => $id, 'message' => 'Reservation created']));
             return $response->withStatus(201)->withHeader('Content-Type', 'application/json');
@@ -174,6 +144,51 @@ class ReservationRoutes
 
         $auth = new AuthMiddleware($settings['jwt_secret']);
 
+        // Admin: resend guest confirmation email (fresh HTML + QR)
+        $app->post('/api/admin/reservations/{id}/resend-confirmation', function (Request $request, Response $response, array $args) use ($settings) {
+            $db = Database::getInstance($settings['db']);
+            $resModel = new Reservation($db);
+            $row = $resModel->findById((int)$args['id']);
+            if (!$row) {
+                $response->getBody()->write(json_encode(['error' => 'Reservation not found']));
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
+            }
+            if (($row['status'] ?? '') === 'cancelled') {
+                $response->getBody()->write(json_encode(['error' => 'Cannot resend email for a cancelled reservation']));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+            $eventModel = new Event($db);
+            $event = $eventModel->findById((int)$row['event_id']);
+            if (!$event) {
+                $response->getBody()->write(json_encode(['error' => 'Event not found']));
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
+            }
+
+            $guestData = [
+                'name'           => $row['name'],
+                'email'          => $row['email'],
+                'phone'          => $row['phone'],
+                'seats'          => (int)$row['seats'],
+                'seating_zone'   => $row['seating_zone'],
+            ];
+            $reservationDate = (string)$row['reservation_date'];
+            $checkinToken = (string)($row['checkin_token'] ?? '');
+
+            self::sendReservationEmails(
+                $settings,
+                $db,
+                $event,
+                $guestData,
+                $reservationDate,
+                (int)$row['id'],
+                $checkinToken,
+                false
+            );
+
+            $response->getBody()->write(json_encode(['message' => 'Confirmation email sent']));
+            return $response->withHeader('Content-Type', 'application/json');
+        })->add($auth);
+
         // Admin: list all reservations
         $app->get('/api/admin/reservations', function (Request $request, Response $response) use ($settings) {
             $db = Database::getInstance($settings['db']);
@@ -206,6 +221,20 @@ class ReservationRoutes
             return $response->withHeader('Content-Type', 'application/json');
         })->add($auth);
 
+        // Admin: delete reservation permanently
+        $app->delete('/api/admin/reservations/{id}', function (Request $request, Response $response, array $args) use ($settings) {
+            $db = Database::getInstance($settings['db']);
+            $model = new Reservation($db);
+            $id = (int)$args['id'];
+            if ($model->findById($id) === null) {
+                $response->getBody()->write(json_encode(['error' => 'Reservation not found']));
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
+            }
+            $model->delete($id);
+            $response->getBody()->write(json_encode(['message' => 'Deleted']));
+            return $response->withHeader('Content-Type', 'application/json');
+        })->add($auth);
+
         // Admin: get reservation by check-in token
         $app->get('/api/admin/reservations/token/{token}', function (Request $request, Response $response, array $args) use ($settings) {
             $db = Database::getInstance($settings['db']);
@@ -234,5 +263,69 @@ class ReservationRoutes
             $response->getBody()->write(json_encode(['checked_in_at' => $checkedInAt]));
             return $response->withHeader('Content-Type', 'application/json');
         })->add($auth);
+    }
+
+    /**
+     * @param array $guestData keys: name, email, phone, seats, seating_zone
+     * @param array $event     Event row from Event::findById
+     */
+    private static function sendReservationEmails(
+        array $settings,
+        \PDO $db,
+        array $event,
+        array $guestData,
+        string $reservationDate,
+        int $reservationId,
+        string $checkinToken,
+        bool $sendAdminNotification = true
+    ): void {
+        $zoneLabel = self::ZONE_LABELS[$guestData['seating_zone'] ?? '']
+            ?? ($guestData['seating_zone'] ?? 'Kein Bereich angegeben');
+        $dateFormatted = date('d.m.Y', strtotime($reservationDate));
+        $emailTpl = new EmailTemplate($settings);
+        $mailer = new Mailer($settings['smtp'] ?? []);
+
+        $adminEmail = $settings['admin_email'] ?? 'office@vibria.art';
+
+        $guestEmbedded = [];
+        if ($checkinToken !== '') {
+            $checkinUrl = rtrim($settings['site_url'] ?? 'https://vibria.art', '/') . '/admin/checkin/' . $checkinToken;
+            $guestEmbedded[] = [
+                'cid'      => EmailTemplate::CHECKIN_QR_CID,
+                'data'     => $emailTpl->checkinQrPngBytes($checkinUrl),
+                'filename' => 'checkin-qr.png',
+                'mime'     => 'image/png',
+            ];
+        }
+
+        $guestHtml = $emailTpl->reservationConfirmation($event, $guestData, $zoneLabel, $dateFormatted, $checkinToken);
+
+        $mailer->send(
+            $guestData['email'],
+            'Reservierungsbestätigung – ' . $event['title'],
+            $guestHtml,
+            'office@vibria.art',
+            $guestEmbedded,
+            [
+                'pdo'         => $db,
+                'type'        => EmailLog::TYPE_RESERVATION_CONFIRMATION,
+                'related_id'  => $reservationId,
+            ]
+        );
+
+        if ($sendAdminNotification) {
+            $mailer->send(
+                $adminEmail,
+                '[VIBRIA] Neue Reservierung – ' . $event['title'],
+                $emailTpl->reservationAdminNotification($event, $guestData, $zoneLabel, $dateFormatted),
+                $guestData['email'],
+                [],
+                [
+                    'pdo'         => $db,
+                    'type'        => EmailLog::TYPE_RESERVATION_ADMIN,
+                    'related_id'  => $reservationId,
+                ]
+            );
+        }
     }
 }

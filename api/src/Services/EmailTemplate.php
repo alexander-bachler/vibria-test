@@ -258,7 +258,7 @@ HTML;
         $eventTitle = htmlspecialchars($event['title']);
         $time = htmlspecialchars($event['time']);
         $seats = (int)$data['seats'];
-        $adminUrl = $this->siteUrl . '/admin/reservations';
+        $adminUrl = $this->siteUrl . '/admin/events?tab=reservations';
 
         $content = <<<HTML
 <p style="margin:0 0 20px;font-family:{$c['fontStack']};font-size:14px;line-height:1.7;color:{$c['text']};">

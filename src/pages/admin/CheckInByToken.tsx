@@ -38,8 +38,9 @@ export default function CheckInByToken() {
     <div className="max-w-lg mx-auto">
       <div className="mb-4">
         <button
-          onClick={() => navigate("/admin/reservations")}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3"
+          type="button"
+          onClick={() => navigate("/admin/events?tab=reservations")}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3 text-left"
         >
           <ArrowLeft size={14} />
           Zurück zu Reservierungen

@@ -125,6 +125,22 @@ export interface ContactMessage {
   created_at: string;
 }
 
+export type EmailLogType =
+  | "reservation_confirmation"
+  | "reservation_admin"
+  | "contact_admin";
+
+export interface EmailLogListItem {
+  id: number;
+  recipient: string;
+  subject: string;
+  type: EmailLogType;
+  status: "sent" | "failed";
+  error_message: string | null;
+  related_id: number | null;
+  created_at: string;
+}
+
 export interface EventImage {
   id: number;
   image_path: string;
@@ -134,5 +150,9 @@ export interface EventImage {
 export interface AdminStats {
   upcoming_events: number;
   total_reservations: number;
+  /** Reservations awaiting confirmation */
+  pending_reservations: number;
   unread_messages: number;
+  /** Count of failed outbound emails in the last 24 hours */
+  failed_emails_24h: number;
 }

@@ -8,6 +8,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\App;
 use Vibria\Middleware\AuthMiddleware;
 use Vibria\Models\ContactMessage;
+use Vibria\Models\EmailLog;
 use Vibria\Services\Database;
 use Vibria\Services\EmailTemplate;
 use Vibria\Services\Mailer;
@@ -44,11 +45,18 @@ class ContactRoutes
             $emailTpl = new EmailTemplate($settings);
             $mailer = new Mailer($settings['smtp'] ?? []);
 
+            $contactHtml = $emailTpl->contactAdminNotification($data);
             $mailer->send(
                 $adminEmail,
                 '[VIBRIA Kontakt] ' . ($data['subject'] ?? 'Neue Nachricht'),
-                $emailTpl->contactAdminNotification($data),
-                $data['email']
+                $contactHtml,
+                $data['email'],
+                [],
+                [
+                    'pdo'        => $db,
+                    'type'       => EmailLog::TYPE_CONTACT_ADMIN,
+                    'related_id' => $id,
+                ]
             );
 
             $response->getBody()->write(json_encode(['id' => $id, 'message' => 'Message sent']));
@@ -75,11 +83,15 @@ class ContactRoutes
             $db = Database::getInstance($settings['db']);
             $events = $db->query("SELECT COUNT(*) FROM events WHERE is_published=1 AND date >= CURDATE()")->fetchColumn();
             $reservations = $db->query("SELECT COUNT(*) FROM reservations WHERE status != 'cancelled'")->fetchColumn();
+            $pendingReservations = $db->query("SELECT COUNT(*) FROM reservations WHERE status = 'pending'")->fetchColumn();
             $unread = $db->query("SELECT COUNT(*) FROM contact_messages WHERE is_read = 0")->fetchColumn();
+            $failedEmails = (new EmailLog($db))->countFailedLast24h();
             $response->getBody()->write(json_encode([
-                'upcoming_events' => (int)$events,
-                'total_reservations' => (int)$reservations,
-                'unread_messages' => (int)$unread,
+                'upcoming_events'       => (int)$events,
+                'total_reservations'    => (int)$reservations,
+                'pending_reservations'  => (int)$pendingReservations,
+                'unread_messages'       => (int)$unread,
+                'failed_emails_24h'     => $failedEmails,
             ]));
             return $response->withHeader('Content-Type', 'application/json');
         })->add($auth);

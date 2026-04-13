@@ -14,6 +14,14 @@ class ContactMessage
         return $this->db->query('SELECT * FROM contact_messages ORDER BY created_at DESC')->fetchAll();
     }
 
+    public function findById(int $id): ?array
+    {
+        $stmt = $this->db->prepare('SELECT * FROM contact_messages WHERE id = ? LIMIT 1');
+        $stmt->execute([$id]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
     public function create(array $data): int
     {
         $stmt = $this->db->prepare(

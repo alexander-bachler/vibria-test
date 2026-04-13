@@ -10,6 +10,7 @@ use Vibria\Routes\BoardRoutes;
 use Vibria\Routes\GalleryRoutes;
 use Vibria\Routes\ReservationRoutes;
 use Vibria\Routes\ContactRoutes;
+use Vibria\Routes\EmailLogRoutes;
 use Vibria\Routes\UploadRoutes;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -35,6 +36,7 @@ BoardRoutes::register($app, $settings);
 GalleryRoutes::register($app, $settings);
 ReservationRoutes::register($app, $settings);
 ContactRoutes::register($app, $settings);
+EmailLogRoutes::register($app, $settings);
 UploadRoutes::register($app, $settings);
 
 $app->run();

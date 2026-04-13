@@ -66,9 +66,9 @@ export default function AdminBoard() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <h1 className="text-2xl uppercase text-foreground">Vorstand</h1>
-        <button className="btn-primary flex items-center gap-2" onClick={() => { setEditing(null); setShowModal(true); }}><Plus size={15} /> Neues Mitglied</button>
+        <button className="btn-primary flex items-center justify-center gap-2 shrink-0 w-full sm:w-auto" onClick={() => { setEditing(null); setShowModal(true); }}><Plus size={15} /> Neues Mitglied</button>
       </div>
       {isLoading ? <div className="h-40 bg-muted rounded animate-pulse" /> : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">

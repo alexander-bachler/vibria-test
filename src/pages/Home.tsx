@@ -158,7 +158,7 @@ function UpcomingPreview({ onReserve }: { onReserve: (e: VEvent) => void }) {
   const upcoming = events
     .filter((e) => e.date >= today)
     .sort((a, b) => a.date.localeCompare(b.date))
-    .slice(0, 3);
+    .slice(0, 6);
 
   if (upcoming.length === 0) {
     return (

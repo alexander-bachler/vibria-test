@@ -24,6 +24,23 @@ class Reservation
         )->fetchAll();
     }
 
+    /** Reservation row joined with event fields needed for emails and admin UI. */
+    public function findById(int $id): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT r.*, e.title AS event_title, e.date AS event_date, e.end_date AS event_end_date,
+                    e.time AS event_time, e.subtitle, e.type AS event_type, e.description AS event_description,
+                    e.admission, e.total_seats
+             FROM reservations r
+             JOIN events e ON r.event_id = e.id
+             WHERE r.id = ?
+             LIMIT 1'
+        );
+        $stmt->execute([$id]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
     public function countByEventAndDate(int $eventId, string $date): int
     {
         $stmt = $this->db->prepare(
@@ -121,6 +138,12 @@ class Reservation
     {
         $stmt = $this->db->prepare('UPDATE reservations SET status = ? WHERE id = ?');
         return $stmt->execute([$status, $id]);
+    }
+
+    public function delete(int $id): bool
+    {
+        $stmt = $this->db->prepare('DELETE FROM reservations WHERE id = ?');
+        return $stmt->execute([$id]);
     }
 
     public function toggleCheckIn(int $id): ?string

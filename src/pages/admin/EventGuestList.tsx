@@ -1,9 +1,9 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowLeft, UserCheck, UserX, Phone, Mail, Search, Users, CalendarDays, QrCode,
+  ArrowLeft, UserCheck, UserX, Phone, Mail, Search, Users, CalendarDays, QrCode, Trash2,
 } from "lucide-react";
-import { useState, useMemo, Fragment } from "react";
+import { useState, useMemo } from "react";
 import { api } from "@/lib/api";
 import type { VEvent, Reservation } from "@/lib/api";
 
@@ -121,12 +121,18 @@ function GuestRow({
   r,
   showDate,
   onCheckIn,
+  onStatusChange,
+  onDelete,
   isPending,
+  deleteBusy,
 }: {
   r: Reservation;
   showDate: boolean;
   onCheckIn: () => void;
+  onStatusChange: (status: string) => void;
+  onDelete: () => void;
   isPending: boolean;
+  deleteBusy: boolean;
 }) {
   return (
     <tr
@@ -134,47 +140,12 @@ function GuestRow({
         r.checked_in_at ? "bg-green-50/60" : "hover:bg-muted/30"
       } ${r.status === "cancelled" ? "opacity-40" : ""}`}
     >
-      <td className="px-4 py-3">
-        <span className="font-medium text-foreground">{r.name}</span>
-      </td>
-      {showDate && (
-        <td className="px-4 py-3 text-muted-foreground text-xs">
-          {formatDateShort(r.reservation_date)}
-        </td>
-      )}
-      <td className="px-4 py-3">
-        <div className="flex flex-col gap-0.5">
-          <a href={`mailto:${r.email}`} className="text-muted-foreground hover:text-primary text-xs flex items-center gap-1">
-            <Mail size={11} /> {r.email}
-          </a>
-          {r.phone && (
-            <a href={`tel:${r.phone}`} className="text-muted-foreground hover:text-primary text-xs flex items-center gap-1">
-              <Phone size={11} /> {r.phone}
-            </a>
-          )}
-        </div>
-      </td>
-      <td className="px-4 py-3">
-        {r.seating_zone ? (
-          <span className="inline-block bg-primary/10 text-primary text-xs px-2 py-0.5 rounded">
-            {ZONE_LABELS[r.seating_zone] ?? r.seating_zone}
-          </span>
-        ) : (
-          <span className="text-muted-foreground/40 text-xs">–</span>
-        )}
-      </td>
-      <td className="px-4 py-3 text-center font-bold">{r.seats}</td>
-      <td className="px-4 py-3 text-center">
-        <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${STATUS_COLORS[r.status] ?? "bg-muted text-muted-foreground"}`}>
-          {r.status}
-        </span>
-      </td>
-      <td className="px-4 py-3 text-center">
+      <td className="px-2 py-3 text-center">
         {r.status !== "cancelled" && (
           <button
             onClick={onCheckIn}
             disabled={isPending}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+            className={`inline-flex items-center gap-1 px-2 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap ${
               r.checked_in_at
                 ? "bg-green-600 text-white hover:bg-green-700"
                 : "bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground"
@@ -188,6 +159,61 @@ function GuestRow({
           </button>
         )}
       </td>
+      <td className="px-3 py-3">
+        <span className="font-medium text-foreground">{r.name}</span>
+      </td>
+      {showDate && (
+        <td className="px-3 py-3 text-muted-foreground text-xs">
+          {formatDateShort(r.reservation_date)}
+        </td>
+      )}
+      <td className="px-3 py-3">
+        <div className="flex flex-col gap-0.5">
+          <a href={`mailto:${r.email}`} className="text-muted-foreground hover:text-primary text-xs flex items-center gap-1">
+            <Mail size={11} /> {r.email}
+          </a>
+          {r.phone && (
+            <a href={`tel:${r.phone}`} className="text-muted-foreground hover:text-primary text-xs flex items-center gap-1">
+              <Phone size={11} /> {r.phone}
+            </a>
+          )}
+        </div>
+      </td>
+      <td className="px-3 py-3">
+        {r.seating_zone ? (
+          <span className="inline-block bg-primary/10 text-primary text-xs px-2 py-0.5 rounded">
+            {ZONE_LABELS[r.seating_zone] ?? r.seating_zone}
+          </span>
+        ) : (
+          <span className="text-muted-foreground/40 text-xs">–</span>
+        )}
+      </td>
+      <td className="px-2 py-3 text-center font-bold">{r.seats}</td>
+      <td className="px-2 py-3 text-center">
+        <select
+          value={r.status}
+          onChange={(e) => onStatusChange(e.target.value)}
+          className={`text-xs font-medium rounded px-2 py-1 border-0 cursor-pointer ${STATUS_COLORS[r.status] ?? "bg-muted text-muted-foreground"}`}
+        >
+          <option value="pending">pending</option>
+          <option value="confirmed">confirmed</option>
+          <option value="cancelled">cancelled</option>
+        </select>
+      </td>
+      <td className="px-3 py-3 text-muted-foreground text-xs whitespace-nowrap">
+        {new Date(r.created_at).toLocaleDateString("de-AT", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+      </td>
+      <td className="px-2 py-3 text-center">
+        <button
+          type="button"
+          onClick={onDelete}
+          disabled={deleteBusy}
+          className="inline-flex items-center justify-center p-1.5 rounded text-destructive hover:bg-destructive/10 disabled:opacity-50"
+          title="Reservierung löschen"
+        >
+          <Trash2 size={14} />
+        </button>
+      </td>
     </tr>
   );
 }
@@ -196,12 +222,18 @@ function GuestCard({
   r,
   showDate,
   onCheckIn,
+  onStatusChange,
+  onDelete,
   isPending,
+  deleteBusy,
 }: {
   r: Reservation;
   showDate: boolean;
   onCheckIn: () => void;
+  onStatusChange: (status: string) => void;
+  onDelete: () => void;
   isPending: boolean;
+  deleteBusy: boolean;
 }) {
   return (
     <div
@@ -213,9 +245,15 @@ function GuestCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-1">
             <span className="font-medium text-foreground text-sm truncate">{r.name}</span>
-            <span className={`shrink-0 inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${STATUS_COLORS[r.status] ?? "bg-muted text-muted-foreground"}`}>
-              {r.status}
-            </span>
+            <select
+              value={r.status}
+              onChange={(e) => onStatusChange(e.target.value)}
+              className={`shrink-0 text-[10px] font-medium rounded px-1.5 py-0.5 border-0 cursor-pointer ${STATUS_COLORS[r.status] ?? "bg-muted text-muted-foreground"}`}
+            >
+              <option value="pending">pending</option>
+              <option value="confirmed">confirmed</option>
+              <option value="cancelled">cancelled</option>
+            </select>
           </div>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
             <span className="font-bold text-foreground">{r.seats} {r.seats === 1 ? "Platz" : "Plätze"}</span>
@@ -236,18 +274,32 @@ function GuestCard({
               <Mail size={11} /> {r.email}
             </a>
           </div>
+          <p className="text-[10px] text-muted-foreground/70 mt-1">
+            Reserviert am {new Date(r.created_at).toLocaleDateString("de-AT", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+          </p>
         </div>
-        {r.status !== "cancelled" && (
+        <div className="flex items-center gap-1 shrink-0">
+          {r.status !== "cancelled" && (
+            <button
+              onClick={onCheckIn}
+              disabled={isPending}
+              className={`flex items-center justify-center w-12 h-12 rounded-sm transition-colors ${
+                r.checked_in_at ? "bg-green-600 text-white" : "bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground"
+              }`}
+            >
+              {r.checked_in_at ? <UserCheck size={20} /> : <UserX size={20} />}
+            </button>
+          )}
           <button
-            onClick={onCheckIn}
-            disabled={isPending}
-            className={`shrink-0 flex items-center justify-center w-12 h-12 rounded-sm transition-colors ${
-              r.checked_in_at ? "bg-green-600 text-white" : "bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground"
-            }`}
+            type="button"
+            onClick={onDelete}
+            disabled={deleteBusy}
+            className="flex items-center justify-center w-10 h-10 rounded-sm text-destructive hover:bg-destructive/10 disabled:opacity-50"
+            title="Löschen"
           >
-            {r.checked_in_at ? <UserCheck size={20} /> : <UserX size={20} />}
+            <Trash2 size={18} />
           </button>
-        )}
+        </div>
       </div>
       {r.checked_in_at && (
         <div className="mt-2 text-[10px] text-green-700 font-medium">
@@ -286,6 +338,29 @@ export default function EventGuestList() {
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: ["admin-reservations", id] }),
   });
+
+  const updateStatusMut = useMutation({
+    mutationFn: ({ resId, status }: { resId: number; status: string }) =>
+      api.patch(`/api/admin/reservations/${resId}`, { status }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["admin-reservations", id] }),
+  });
+
+  const deleteResMut = useMutation({
+    mutationFn: (resId: number) => api.delete(`/api/admin/reservations/${resId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-reservations", id] });
+      qc.invalidateQueries({ queryKey: ["admin-reservations"] });
+      qc.invalidateQueries({ queryKey: ["admin-stats"] });
+      qc.invalidateQueries({ queryKey: ["admin-events"] });
+    },
+  });
+
+  const handleDeleteReservation = (resId: number) => {
+    if (confirm("Diese Reservierung dauerhaft löschen?")) {
+      deleteResMut.mutate(resId);
+    }
+  };
 
   const uniqueDates = useMemo(() => {
     const dates = [...new Set(reservations.map((r) => r.reservation_date))];
@@ -357,13 +432,15 @@ export default function EventGuestList() {
   const renderTableHead = (showDate: boolean) => (
     <thead>
       <tr className="border-b border-border bg-muted/50">
-        <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground font-heading">Name</th>
-        {showDate && <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground font-heading">Datum</th>}
-        <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground font-heading">Kontakt</th>
-        <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground font-heading">Bereich</th>
-        <th className="text-center px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground font-heading">Plätze</th>
-        <th className="text-center px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground font-heading">Status</th>
-        <th className="text-center px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground font-heading">Check-in</th>
+        <th className="text-center px-2 py-3 text-xs uppercase tracking-wider text-muted-foreground font-heading">Check-in</th>
+        <th className="text-left px-3 py-3 text-xs uppercase tracking-wider text-muted-foreground font-heading">Name</th>
+        {showDate && <th className="text-left px-3 py-3 text-xs uppercase tracking-wider text-muted-foreground font-heading">Datum</th>}
+        <th className="text-left px-3 py-3 text-xs uppercase tracking-wider text-muted-foreground font-heading">Kontakt</th>
+        <th className="text-left px-3 py-3 text-xs uppercase tracking-wider text-muted-foreground font-heading">Bereich</th>
+        <th className="text-center px-2 py-3 text-xs uppercase tracking-wider text-muted-foreground font-heading">Plätze</th>
+        <th className="text-center px-2 py-3 text-xs uppercase tracking-wider text-muted-foreground font-heading">Status</th>
+        <th className="text-left px-3 py-3 text-xs uppercase tracking-wider text-muted-foreground font-heading">Reserviert am</th>
+        <th className="text-center px-2 py-3 text-xs uppercase tracking-wider text-muted-foreground font-heading w-10"> </th>
       </tr>
     </thead>
   );
@@ -372,17 +449,19 @@ export default function EventGuestList() {
     <div className="max-w-5xl">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
           <button
+            type="button"
             onClick={() => navigate("/admin/events")}
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors text-left"
           >
             <ArrowLeft size={14} />
             Zurück zu Veranstaltungen
           </button>
           <button
+            type="button"
             onClick={() => navigate("/admin/scan")}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground text-sm font-heading uppercase tracking-wider rounded-sm hover:bg-primary/90 transition-colors"
+            className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground text-sm font-heading uppercase tracking-wider rounded-sm hover:bg-primary/90 transition-colors w-full sm:w-auto shrink-0"
           >
             <QrCode size={14} />
             QR Scanner
@@ -542,12 +621,12 @@ export default function EventGuestList() {
               </div>
 
               {/* Desktop table */}
-              <div className="hidden md:block bg-card border border-border rounded-sm overflow-hidden">
-                <table className="w-full text-sm font-body">
+              <div className="hidden md:block bg-card border border-border rounded-sm overflow-x-auto">
+                <table className="w-full text-sm font-body min-w-[700px]">
                   {renderTableHead(false)}
                   <tbody>
                     {dayReservations.map((r) => (
-                      <GuestRow key={r.id} r={r} showDate={false} onCheckIn={() => checkInMut.mutate(r.id)} isPending={checkInMut.isPending} />
+                      <GuestRow key={r.id} r={r} showDate={false} onCheckIn={() => checkInMut.mutate(r.id)} onStatusChange={(status) => updateStatusMut.mutate({ resId: r.id, status })} onDelete={() => handleDeleteReservation(r.id)} isPending={checkInMut.isPending} deleteBusy={deleteResMut.isPending} />
                     ))}
                   </tbody>
                 </table>
@@ -556,7 +635,7 @@ export default function EventGuestList() {
               {/* Mobile cards */}
               <div className="md:hidden space-y-2">
                 {dayReservations.map((r) => (
-                  <GuestCard key={r.id} r={r} showDate={false} onCheckIn={() => checkInMut.mutate(r.id)} isPending={checkInMut.isPending} />
+                  <GuestCard key={r.id} r={r} showDate={false} onCheckIn={() => checkInMut.mutate(r.id)} onStatusChange={(status) => updateStatusMut.mutate({ resId: r.id, status })} onDelete={() => handleDeleteReservation(r.id)} isPending={checkInMut.isPending} deleteBusy={deleteResMut.isPending} />
                 ))}
               </div>
             </div>
@@ -565,19 +644,19 @@ export default function EventGuestList() {
       ) : (
         /* Flat list (single day or filtered to one day) */
         <>
-          <div className="hidden md:block bg-card border border-border rounded-sm overflow-hidden">
-            <table className="w-full text-sm font-body">
+          <div className="hidden md:block bg-card border border-border rounded-sm overflow-x-auto">
+            <table className="w-full text-sm font-body min-w-[700px]">
               {renderTableHead(showDateColumn)}
               <tbody>
                 {filtered.map((r) => (
-                  <GuestRow key={r.id} r={r} showDate={showDateColumn} onCheckIn={() => checkInMut.mutate(r.id)} isPending={checkInMut.isPending} />
+                  <GuestRow key={r.id} r={r} showDate={showDateColumn} onCheckIn={() => checkInMut.mutate(r.id)} onStatusChange={(status) => updateStatusMut.mutate({ resId: r.id, status })} onDelete={() => handleDeleteReservation(r.id)} isPending={checkInMut.isPending} deleteBusy={deleteResMut.isPending} />
                 ))}
               </tbody>
             </table>
           </div>
           <div className="md:hidden space-y-2">
             {filtered.map((r) => (
-              <GuestCard key={r.id} r={r} showDate={showDateColumn} onCheckIn={() => checkInMut.mutate(r.id)} isPending={checkInMut.isPending} />
+              <GuestCard key={r.id} r={r} showDate={showDateColumn} onCheckIn={() => checkInMut.mutate(r.id)} onStatusChange={(status) => updateStatusMut.mutate({ resId: r.id, status })} onDelete={() => handleDeleteReservation(r.id)} isPending={checkInMut.isPending} deleteBusy={deleteResMut.isPending} />
             ))}
           </div>
         </>
